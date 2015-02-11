@@ -12,7 +12,7 @@
 //  prior written permission.
 
 var $ = require('jquery')
-var SDK = require('./sdk')
+var LightSDK = require('./light-sdk')
 var PackageParser = require('./epub/package-document-parser')
 var PublicationFetcher = require('./epub-fetch/publication-fetcher')
 
@@ -35,19 +35,9 @@ function Reader(readiumOptions, readerOptions) {
 
   var jsLibRoot = readiumOptions.jsLibRoot;
 
-  if (!readiumOptions.useSimpleLoader) {
-    // TODO We're not bundling IframeZipLoader
-    readerOptions.iframeLoader = new IframeZipLoader(SDK, function() {
-      return _currentPublicationFetcher;
-    }, {
-      mathJaxUrl: readerOptions.mathJaxUrl
-    });;
-  } else {
-    readerOptions.iframeLoader = new SDK.Views.IFrameLoader();
-  }
+  readerOptions.iframeLoader = new LightSDK.Views.IFrameLoader();
 
-
-  this.reader = new SDK.Views.ReaderView(readerOptions);
+  this.reader = new LightSDK.Views.ReaderView(readerOptions);
 
   this.openPackageDocument = function(bookRoot, callback, openPageRequest) {
 
@@ -80,9 +70,9 @@ function Reader(readiumOptions, readerOptions) {
   }
 
   //we need global access to the reader object for automation test being able to call it's APIs
-  SDK.reader = this.reader;
+  LightSDK.reader = this.reader;
 
-  SDK.trigger(SDK.Events.READER_INITIALIZED, this.reader);
+  LightSDK.trigger(LightSDK.Events.READER_INITIALIZED, this.reader);
 };
 
 Reader.version = require('../package.json').version;

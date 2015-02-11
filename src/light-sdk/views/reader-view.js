@@ -35,22 +35,22 @@
 
 var _ = require('underscore')
 var $ = require('jquery')
-var AnnotationsManager = require('./annotations-manager')
+// var AnnotationsManager = require('./annotations-manager')
 var Backbone = require('backbone')
 var Events = require('../events')
 var extendedThrottle = require('../helpers/extended-throttle')
-var FixedView = require('./fixed-view')
+// var FixedView = require('./fixed-view')
 var IFrameLoader = require('./iframe-loader')
 var InternalEvents = require('../internal-events')
-var InternalLinksSupport = require('./internal-links-support')
+// var InternalLinksSupport = require('./internal-links-support')
 var isIframeAlive = require('../helpers/is-iframe-alive')
-var MediaOverlayDataInjector = require('./media-overlay-data-injector')
-var MediaOverlayPlayer = require('./media-overlay-player')
+// var MediaOverlayDataInjector = require('./media-overlay-data-injector')
+var MediaOverlayPlayer = {}; //require('./media-overlay-player')
 var Package = require('../models/package')
 var PageOpenRequest = require('../models/page-open-request')
 var ReflowableView = require('./reflowable-view')
 var ResolveContentRef = require('../helpers/resolve-content-ref')
-var ScrollView = require('./scroll-view')
+// var ScrollView = require('./scroll-view')
 var setStyles = require('../helpers/set-styles')
 var StyleCollection = require('../collections/style')
 var Switches = require('../models/switches')
@@ -89,12 +89,12 @@ function ReaderView(options) {
   var _userStyles = new StyleCollection();
   //styles applied to the content documents
   var _bookStyles = new StyleCollection();
-  var _internalLinksSupport = new InternalLinksSupport(this);
-  var _mediaOverlayPlayer;
-  var _mediaOverlayDataInjector;
+  // var _internalLinksSupport = new InternalLinksSupport(this);
+  // var _mediaOverlayPlayer;
+  // var _mediaOverlayDataInjector;
   var _iframeLoader;
   var _$el;
-  var _annotationsManager = new AnnotationsManager(self, options);
+  // var _annotationsManager = new AnnotationsManager(self, options);
 
   //We will call onViewportResize after user stopped resizing window
   var lazyResize = extendedThrottle(
@@ -141,23 +141,23 @@ function ReaderView(options) {
     // NOTE: _$el == options.$viewport
     _$el.css("overflow", "hidden");
 
-    switch (viewType) {
-      case VIEW_TYPE_FIXED:
+    // switch (viewType) {
+    //   case VIEW_TYPE_FIXED:
 
-        _$el.css("overflow", "auto"); // for content pan, see self.setZoom()
+    //     _$el.css("overflow", "auto"); // for content pan, see self.setZoom()
 
-        createdView = new FixedView(options, self);
-        break;
-      case VIEW_TYPE_SCROLLED_DOC:
-        createdView = new ScrollView(options, false, self);
-        break;
-      case VIEW_TYPE_SCROLLED_CONTINUOUS:
-        createdView = new ScrollView(options, true, self);
-        break;
-      default:
+    //     createdView = new FixedView(options, self);
+    //     break;
+    //   case VIEW_TYPE_SCROLLED_DOC:
+    //     createdView = new ScrollView(options, false, self);
+    //     break;
+    //   case VIEW_TYPE_SCROLLED_CONTINUOUS:
+    //     createdView = new ScrollView(options, true, self);
+    //     break;
+    //   default:
         createdView = new ReflowableView(options, self);
-        break;
-    }
+        // break;
+    // }
 
     return createdView;
   };
@@ -226,6 +226,8 @@ function ReaderView(options) {
 
     var desiredViewType = deduceDesiredViewType(spineItem);
 
+    console.log('desiredViewType', desiredViewType);
+
     if (_currentView) {
 
       if (self.getCurrentViewType() == desiredViewType) {
@@ -262,10 +264,10 @@ function ReaderView(options) {
       if (!isIframeAlive($iframe[0])) return;
 
       // performance degrades with large DOM (e.g. word-level text-audio sync)
-      _mediaOverlayDataInjector.attachMediaOverlayData($iframe, spineItem, _viewerSettings);
+      // _mediaOverlayDataInjector.attachMediaOverlayData($iframe, spineItem, _viewerSettings);
 
-      _internalLinksSupport.processLinkElements($iframe, spineItem);
-      _annotationsManager.attachAnnotations($iframe, spineItem);
+      // _internalLinksSupport.processLinkElements($iframe, spineItem);
+      // _annotationsManager.attachAnnotations($iframe, spineItem);
 
       var contentDoc = $iframe[0].contentDocument;
       Trigger.register(contentDoc);
@@ -283,7 +285,7 @@ function ReaderView(options) {
       //we call on onPageChanged explicitly instead of subscribing to the ReadiumSDK.Events.PAGINATION_CHANGED by
       //mediaOverlayPlayer because we hve to guarantee that mediaOverlayPlayer will be updated before the host
       //application will be notified by the same ReadiumSDK.Events.PAGINATION_CHANGED event
-      _mediaOverlayPlayer.onPageChanged(pageChangeData);
+      // _mediaOverlayPlayer.onPageChanged(pageChangeData);
 
       self.trigger(Events.PAGINATION_CHANGED, pageChangeData);
     });
@@ -392,14 +394,14 @@ function ReaderView(options) {
     _spine = _package.spine;
     _spine.handleLinear(true);
 
-    if (_mediaOverlayPlayer) {
-      _mediaOverlayPlayer.reset();
-    }
+    // if (_mediaOverlayPlayer) {
+    //   _mediaOverlayPlayer.reset();
+    // }
 
-    _mediaOverlayPlayer = new MediaOverlayPlayer(self, $.proxy(onMediaPlayerStatusChanged, self));
-    _mediaOverlayPlayer.setAutomaticNextSmil(_viewerSettings.mediaOverlaysAutomaticPageTurn ? true : false); // just to ensure the internal var is set to the default settings (user settings are applied below at self.updateSettings(openBookData.settings);)
+    // _mediaOverlayPlayer = new MediaOverlayPlayer(self, $.proxy(onMediaPlayerStatusChanged, self));
+    // _mediaOverlayPlayer.setAutomaticNextSmil(_viewerSettings.mediaOverlaysAutomaticPageTurn ? true : false); // just to ensure the internal var is set to the default settings (user settings are applied below at self.updateSettings(openBookData.settings);)
 
-    _mediaOverlayDataInjector = new MediaOverlayDataInjector(_package.media_overlay, _mediaOverlayPlayer);
+    // _mediaOverlayDataInjector = new MediaOverlayDataInjector(_package.media_overlay, _mediaOverlayPlayer);
 
 
     resetCurrentView();
@@ -559,9 +561,9 @@ function ReaderView(options) {
 
     _viewerSettings.update(settingsData);
 
-    if (_mediaOverlayPlayer) {
-      _mediaOverlayPlayer.setAutomaticNextSmil(_viewerSettings.mediaOverlaysAutomaticPageTurn ? true : false);
-    }
+    // if (_mediaOverlayPlayer) {
+    //   _mediaOverlayPlayer.setAutomaticNextSmil(_viewerSettings.mediaOverlaysAutomaticPageTurn ? true : false);
+    // }
 
     if (_currentView && !settingsData.doNotUpdateView) {
 
@@ -892,8 +894,8 @@ function ReaderView(options) {
 
     setStyles(_userStyles.getStyles(), _$el);
 
-    if (_mediaOverlayPlayer)
-      _mediaOverlayPlayer.applyStyles();
+    // if (_mediaOverlayPlayer)
+    //   _mediaOverlayPlayer.applyStyles();
 
     if (doNotUpdateView) return;
 
@@ -902,16 +904,16 @@ function ReaderView(options) {
     }
   }
 
-  /**
-   * Opens a content url from a media player context
-   *
-   * @param {string} contentRefUrl
-   * @param {string} sourceFileHref
-   * @param offset
-   */
-  this.mediaOverlaysOpenContentUrl = function(contentRefUrl, sourceFileHref, offset) {
-    _mediaOverlayPlayer.mediaOverlaysOpenContentUrl(contentRefUrl, sourceFileHref, offset);
-  };
+  // /**
+  //  * Opens a content url from a media player context
+  //  *
+  //  * @param {string} contentRefUrl
+  //  * @param {string} sourceFileHref
+  //  * @param offset
+  //  */
+  // this.mediaOverlaysOpenContentUrl = function(contentRefUrl, sourceFileHref, offset) {
+  //   _mediaOverlayPlayer.mediaOverlaysOpenContentUrl(contentRefUrl, sourceFileHref, offset);
+  // };
 
 
 
@@ -1015,122 +1017,122 @@ function ReaderView(options) {
     _bookStyles.clear();
   };
 
-  /**
-   * Returns true if media overlay available for one of the open pages.
-   *
-   * @returns {boolean}
-   */
-  this.isMediaOverlayAvailable = function() {
+  // /**
+  //  * Returns true if media overlay available for one of the open pages.
+  //  *
+  //  * @returns {boolean}
+  //  */
+  // this.isMediaOverlayAvailable = function() {
 
-    if (!_mediaOverlayPlayer) return false;
+  //   if (!_mediaOverlayPlayer) return false;
 
-    return _mediaOverlayPlayer.isMediaOverlayAvailable();
-  };
+  //   return _mediaOverlayPlayer.isMediaOverlayAvailable();
+  // };
 
-  /*
-      this.setMediaOverlaySkippables = function(items) {
+  // /*
+  //     this.setMediaOverlaySkippables = function(items) {
 
-          _mediaOverlayPlayer.setMediaOverlaySkippables(items);
-      };
+  //         _mediaOverlayPlayer.setMediaOverlaySkippables(items);
+  //     };
 
-      this.setMediaOverlayEscapables = function(items) {
+  //     this.setMediaOverlayEscapables = function(items) {
 
-          _mediaOverlayPlayer.setMediaOverlayEscapables(items);
-      };
-  */
+  //         _mediaOverlayPlayer.setMediaOverlayEscapables(items);
+  //     };
+  // */
 
-  /**
-   * Starts/Stop playing media overlay on current page
-   */
-  this.toggleMediaOverlay = function() {
+  // /**
+  //  * Starts/Stop playing media overlay on current page
+  //  */
+  // this.toggleMediaOverlay = function() {
 
-    _mediaOverlayPlayer.toggleMediaOverlay();
-  };
+  //   _mediaOverlayPlayer.toggleMediaOverlay();
+  // };
 
 
-  /**
-   * Plays next fragment media overlay
-   */
-  this.nextMediaOverlay = function() {
+  // /**
+  //  * Plays next fragment media overlay
+  //  */
+  // this.nextMediaOverlay = function() {
 
-    _mediaOverlayPlayer.nextMediaOverlay();
+  //   _mediaOverlayPlayer.nextMediaOverlay();
 
-  };
+  // };
 
-  /**
-   * Plays previous fragment media overlay
-   */
-  this.previousMediaOverlay = function() {
+  // /**
+  //  * Plays previous fragment media overlay
+  //  */
+  // this.previousMediaOverlay = function() {
 
-    _mediaOverlayPlayer.previousMediaOverlay();
+  //   _mediaOverlayPlayer.previousMediaOverlay();
 
-  };
+  // };
 
-  /**
-   * Plays next available fragment media overlay that is outside of the current escapable scope
-   */
-  this.escapeMediaOverlay = function() {
+  // /**
+  //  * Plays next available fragment media overlay that is outside of the current escapable scope
+  //  */
+  // this.escapeMediaOverlay = function() {
 
-    _mediaOverlayPlayer.escape();
-  };
+  //   _mediaOverlayPlayer.escape();
+  // };
 
-  /**
-   * End media overlay TTS
-   * @todo Clarify what this does with Daniel.
-   */
-  this.ttsEndedMediaOverlay = function() {
+  // /**
+  //  * End media overlay TTS
+  //  * @todo Clarify what this does with Daniel.
+  //  */
+  // this.ttsEndedMediaOverlay = function() {
 
-    _mediaOverlayPlayer.onTTSEnd();
-  };
+  //   _mediaOverlayPlayer.onTTSEnd();
+  // };
 
-  /**
-   * Pause currently playing media overlays.
-   */
-  this.pauseMediaOverlay = function() {
+  // /**
+  //  * Pause currently playing media overlays.
+  //  */
+  // this.pauseMediaOverlay = function() {
 
-    _mediaOverlayPlayer.pause();
-  };
+  //   _mediaOverlayPlayer.pause();
+  // };
 
-  /**
-   * Start/Resume playback of media overlays.
-   */
-  this.playMediaOverlay = function() {
+  // /**
+  //  * Start/Resume playback of media overlays.
+  //  */
+  // this.playMediaOverlay = function() {
 
-    _mediaOverlayPlayer.play();
-  };
+  //   _mediaOverlayPlayer.play();
+  // };
 
-  /**
-   * Determine if media overlays are currently playing.
-   * @returns {boolean}
-   */
-  this.isPlayingMediaOverlay = function() {
+  // /**
+  //  * Determine if media overlays are currently playing.
+  //  * @returns {boolean}
+  //  */
+  // this.isPlayingMediaOverlay = function() {
 
-    return _mediaOverlayPlayer.isPlaying();
-  };
+  //   return _mediaOverlayPlayer.isPlaying();
+  // };
 
-  //
-  // should use ReadiumSDK.Events.SETTINGS_APPLIED instead!
-  //    this.setRateMediaOverlay = function(rate) {
-  //
-  //        _mediaOverlayPlayer.setRate(rate);
-  //    };
-  //    this.setVolumeMediaOverlay = function(volume){
-  //
-  //        _mediaOverlayPlayer.setVolume(volume);
-  //    };
+  // //
+  // // should use ReadiumSDK.Events.SETTINGS_APPLIED instead!
+  // //    this.setRateMediaOverlay = function(rate) {
+  // //
+  // //        _mediaOverlayPlayer.setRate(rate);
+  // //    };
+  // //    this.setVolumeMediaOverlay = function(volume){
+  // //
+  // //        _mediaOverlayPlayer.setVolume(volume);
+  // //    };
 
-  /**
-   * Get the first visible media overlay element from the currently active content document(s)
-   * @returns {HTMLElement|undefined}
-   */
-  this.getFirstVisibleMediaOverlayElement = function() {
+  // /**
+  //  * Get the first visible media overlay element from the currently active content document(s)
+  //  * @returns {HTMLElement|undefined}
+  //  */
+  // this.getFirstVisibleMediaOverlayElement = function() {
 
-    if (_currentView) {
-      return _currentView.getFirstVisibleMediaOverlayElement();
-    }
+  //   if (_currentView) {
+  //     return _currentView.getFirstVisibleMediaOverlayElement();
+  //   }
 
-    return undefined;
-  };
+  //   return undefined;
+  // };
 
   /**
    * Used to jump to an element to make sure it is visible when a content document is paginated
@@ -1196,53 +1198,53 @@ function ReaderView(options) {
     }
   };
 
-  /**
-   * Returns current selection partial Cfi, useful for workflows that need to check whether the user has selected something.
-   *
-   * @returns {object | undefined} partial cfi object or undefined if nothing is selected
-   */
-  this.getCurrentSelectionCfi = function() {
-    return _annotationsManager.getCurrentSelectionCfi();
-  };
+  // /**
+  //  * Returns current selection partial Cfi, useful for workflows that need to check whether the user has selected something.
+  //  *
+  //  * @returns {object | undefined} partial cfi object or undefined if nothing is selected
+  //  */
+  // this.getCurrentSelectionCfi = function() {
+  //   return _annotationsManager.getCurrentSelectionCfi();
+  // };
 
-  /**
-   * Creates a higlight based on given parameters
-   *
-   * @param {string} spineIdRef    spine idref that defines the partial Cfi
-   * @param {string} cfi           partial CFI (withouth the indirection step) relative to the spine index
-   * @param {string} id            id of the highlight. must be unique
-   * @param {string} type          currently "highlight" only
-   *
-   * @returns {object | undefined} partial cfi object of the created highlight
-   */
-  this.addHighlight = function(spineIdRef, Cfi, id, type, styles) {
-    return _annotationsManager.addHighlight(spineIdRef, Cfi, id, type, styles);
-  };
+  // /**
+  //  * Creates a higlight based on given parameters
+  //  *
+  //  * @param {string} spineIdRef    spine idref that defines the partial Cfi
+  //  * @param {string} cfi           partial CFI (withouth the indirection step) relative to the spine index
+  //  * @param {string} id            id of the highlight. must be unique
+  //  * @param {string} type          currently "highlight" only
+  //  *
+  //  * @returns {object | undefined} partial cfi object of the created highlight
+  //  */
+  // this.addHighlight = function(spineIdRef, Cfi, id, type, styles) {
+  //   return _annotationsManager.addHighlight(spineIdRef, Cfi, id, type, styles);
+  // };
 
 
-  /**
-   * Creates a higlight based on the current selection
-   *
-   * @param {string} id id of the highlight. must be unique
-   * @param {string} type currently "highlight" only
-   *
-   * @returns {object | undefined} partial cfi object of the created highlight
-   */
-  this.addSelectionHighlight = function(id, type) {
-    return _annotationsManager.addSelectionHighlight(id, type);
-  };
+  // /**
+  //  * Creates a higlight based on the current selection
+  //  *
+  //  * @param {string} id id of the highlight. must be unique
+  //  * @param {string} type currently "highlight" only
+  //  *
+  //  * @returns {object | undefined} partial cfi object of the created highlight
+  //  */
+  // this.addSelectionHighlight = function(id, type) {
+  //   return _annotationsManager.addSelectionHighlight(id, type);
+  // };
 
-  /**
-   * Removes A given highlight
-   *
-   * @param {string} id  The id associated with the highlight.
-   *
-   * @returns {undefined}
-   *
-   */
-  this.removeHighlight = function(id) {
-    return _annotationsManager.removeHighlight(id);
-  };
+  // /**
+  //  * Removes A given highlight
+  //  *
+  //  * @param {string} id  The id associated with the highlight.
+  //  *
+  //  * @returns {undefined}
+  //  *
+  //  */
+  // this.removeHighlight = function(id) {
+  //   return _annotationsManager.removeHighlight(id);
+  // };
 
   /**
    *
