@@ -8133,7 +8133,7 @@ var Deferred = require('simply-deferred');
 var URI = require('URIjs');
 var ContentTypeDiscovery = require('./discover-content-type');
 
-Deferred.installTo($);
+Deferred.installInto($);
 
 function ContentDocumentFetcher(publicationFetcher, spineItem, loadedDocumentUri, publicationResourcesCache) {
 
@@ -8874,7 +8874,7 @@ var ResourceCache = require('./resource-cache');
 var URI = require('URIjs');
 var ZipResourceFetcher = require('./zip-resource-fetcher');
 
-Deferred.installTo($);
+Deferred.installInto($);
 
 function PublicationFetcher(bookRoot, jsLibRoot) {
 
@@ -10122,7 +10122,7 @@ var $ = require('zepto')
 var _ = require('underscore')
 var Deferred = require('simply-deferred');
 
-Deferred.installTo($);
+Deferred.installInto($);
 
 // `SmilDocumentParser` is used to parse the xml of an epub package
 // document and build a javascript object. The constructor accepts an
@@ -11384,7 +11384,8 @@ var ReadiumSDK = {
   Events: require('./events'),
   version: function() {
     return "0.8.0";
-  }
+  },
+  Parser: require('../../lib/epubjs/parser')
 }
 
 require('./navigator-shim')
@@ -11393,7 +11394,7 @@ _.extend(ReadiumSDK, Backbone.Events)
 
 module.exports = ReadiumSDK
 
-},{"./events":30,"./navigator-shim":64,"./views":68,"backbone":7,"underscore":10}],51:[function(require,module,exports){
+},{"../../lib/epubjs/parser":1,"./events":30,"./navigator-shim":64,"./views":68,"backbone":7,"underscore":10}],51:[function(require,module,exports){
     /**
      * Internal Events
      *

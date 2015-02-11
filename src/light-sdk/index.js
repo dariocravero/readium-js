@@ -6,7 +6,8 @@ var ReadiumSDK = {
   Events: require('./events'),
   version: function() {
     return "0.8.0";
-  }
+  },
+  Parser: require('../../lib/epubjs/parser')
 }
 
 require('./navigator-shim')
