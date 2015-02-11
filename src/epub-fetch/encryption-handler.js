@@ -25,7 +25,7 @@ function EncryptionHandler(encryptionData) {
 
   function blob2BinArray(blob, callback) {
     var fileReader = new FileReader();
-    fileReader.onload = function () {
+    fileReader.onload = function() {
       var arrayBuffer = this.result;
       callback(new Uint8Array(arrayBuffer));
     };
@@ -34,17 +34,20 @@ function EncryptionHandler(encryptionData) {
 
   function xorObfuscatedBlob(obfuscatedResourceBlob, prefixLength, xorKey, callback) {
     var obfuscatedPrefixBlob = obfuscatedResourceBlob.slice(0, prefixLength);
-    blob2BinArray(obfuscatedPrefixBlob, function (bytes) {
+    blob2BinArray(obfuscatedPrefixBlob, function(bytes) {
       var masklen = xorKey.length;
       for (var i = 0; i < prefixLength; i++) {
         bytes[i] = bytes[i] ^ (xorKey[i % masklen]);
       }
-      var deobfuscatedPrefixBlob = new Blob([bytes], { type: obfuscatedResourceBlob.type });
+      var deobfuscatedPrefixBlob = new Blob([bytes], {
+        type: obfuscatedResourceBlob.type
+      });
       var remainderBlob = obfuscatedResourceBlob.slice(prefixLength);
-      var deobfuscatedBlob = new Blob([deobfuscatedPrefixBlob, remainderBlob],
-                                      { type: obfuscatedResourceBlob.type });
+      var deobfuscatedBlob = new Blob([deobfuscatedPrefixBlob, remainderBlob], {
+        type: obfuscatedResourceBlob.type
+      });
 
-                                      callback(deobfuscatedBlob);
+      callback(deobfuscatedBlob);
     });
   }
 
@@ -83,12 +86,12 @@ function EncryptionHandler(encryptionData) {
 
   // PUBLIC API
 
-  this.isEncryptionSpecified = function () {
+  this.isEncryptionSpecified = function() {
     return encryptionData && encryptionData.encryptions;
   };
 
 
-  this.getEncryptionMethodForRelativePath = function (pathRelativeToRoot) {
+  this.getEncryptionMethodForRelativePath = function(pathRelativeToRoot) {
     if (self.isEncryptionSpecified()) {
       return encryptionData.encryptions[pathRelativeToRoot];
     } else {
@@ -96,7 +99,7 @@ function EncryptionHandler(encryptionData) {
     }
   };
 
-  this.getDecryptionFunctionForRelativePath = function (pathRelativeToRoot) {
+  this.getDecryptionFunctionForRelativePath = function(pathRelativeToRoot) {
     var encryptionMethod = self.getEncryptionMethodForRelativePath(pathRelativeToRoot);
     if (encryptionMethod && ENCRYPTION_METHODS[encryptionMethod]) {
       return ENCRYPTION_METHODS[encryptionMethod];
@@ -107,26 +110,28 @@ function EncryptionHandler(encryptionData) {
 
 };
 
-EncryptionHandler.CreateEncryptionData =  function(id, encryptionDom) {
+EncryptionHandler.CreateEncryptionData = function(id, encryptionDom) {
 
   var encryptionData = {
     uid: id,
-    uidHash: window.Crypto.SHA1(unescape(encodeURIComponent(id.trim())), { asBytes: true }),
+    uidHash: window.Crypto.SHA1(unescape(encodeURIComponent(id.trim())), {
+      asBytes: true
+    }),
     encryptions: undefined
   };
 
   var encryptedData = $('EncryptedData', encryptionDom);
-  encryptedData.each(function (index, encryptedData) {
+  encryptedData.each(function(index, encryptedData) {
     var encryptionAlgorithm = $('EncryptionMethod', encryptedData).first().attr('Algorithm');
 
     // For some reason, jQuery selector "" against XML DOM sometimes doesn't match properly
     var cipherReference = $('CipherReference', encryptedData);
-    cipherReference.each(function (index, CipherReference) {
+    cipherReference.each(function(index, CipherReference) {
       var cipherReferenceURI = $(CipherReference).attr('URI');
       console.log('Encryption/obfuscation algorithm ' + encryptionAlgorithm + ' specified for ' +
-                  cipherReferenceURI);
+        cipherReferenceURI);
 
-      if(!encryptionData.encryptions) {
+      if (!encryptionData.encryptions) {
         encryptionData.encryptions = {};
       }
 

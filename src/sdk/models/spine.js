@@ -34,200 +34,200 @@ var SpineItemConstants = require('./spine-item-constants')
 
 function Spine(epubPackage, spineDTO) {
 
-    var self = this;
+  var self = this;
 
-    /*
-     * Collection of spine items
-     * @property items
-     * @type {Array}
-     */
-    this.items = [];
+  /*
+   * Collection of spine items
+   * @property items
+   * @type {Array}
+   */
+  this.items = [];
 
-    /*
-     * Page progression direction ltr|rtl|default
-     * @property direction
-     * @type {string}
-     */
-    this.direction = "ltr";
+  /*
+   * Page progression direction ltr|rtl|default
+   * @property direction
+   * @type {string}
+   */
+  this.direction = "ltr";
 
-    /*
-     * @property package
-     * @type {ReadiumSDK.Models.Package}
-     *
-     */
-    this.package = epubPackage;
+  /*
+   * @property package
+   * @type {ReadiumSDK.Models.Package}
+   *
+   */
+  this.package = epubPackage;
 
-    var _handleLinear = false;
+  var _handleLinear = false;
 
-    this.handleLinear = function(handleLinear) {
-        _handleLinear = handleLinear;
-    };
+  this.handleLinear = function(handleLinear) {
+    _handleLinear = handleLinear;
+  };
 
-    function isValidLinearItem(item) {
-        return !_handleLinear || item.linear !== "no";
+  function isValidLinearItem(item) {
+    return !_handleLinear || item.linear !== "no";
+  }
+
+
+  this.isValidLinearItem = function(index) {
+
+    if (!isValidIndex(index)) {
+      return undefined;
     }
 
+    return isValidLinearItem(this.item(index));
+  };
 
-    this.isValidLinearItem = function(index) {
-        
-        if(!isValidIndex(index)) {
-            return undefined;
-        }
+  this.prevItem = function(item) {
 
-        return isValidLinearItem(this.item(index));
-    };
+    return lookForPrevValidItem(item.index - 1);
+  };
 
-    this.prevItem = function(item) {
+  function lookForNextValidItem(ix) {
 
-        return lookForPrevValidItem(item.index - 1);
-    };
-
-    function lookForNextValidItem(ix) {
-
-        if(!isValidIndex(ix)) {
-            return undefined;
-        }
-
-        var item = self.items[ix];
-
-        if(isValidLinearItem(item)) {
-            return item;
-        }
-
-        return lookForNextValidItem(item.index + 1);
+    if (!isValidIndex(ix)) {
+      return undefined;
     }
 
-    function lookForPrevValidItem(ix) {
+    var item = self.items[ix];
 
-        if(!isValidIndex(ix)) {
-            return undefined;
-        }
-
-        var item = self.items[ix];
-
-        if(isValidLinearItem(item)) {
-            return item;
-        }
-
-        return lookForPrevValidItem(item.index - 1);
+    if (isValidLinearItem(item)) {
+      return item;
     }
 
-    this.nextItem = function(item){
+    return lookForNextValidItem(item.index + 1);
+  }
 
-        return lookForNextValidItem(item.index + 1);
-    };
+  function lookForPrevValidItem(ix) {
 
-    this.getItemUrl = function(item) {
-
-        return self.package.resolveRelativeUrl(item.href);
-
-    };
-
-    function isValidIndex(index) {
-
-        return index >= 0 && index < self.items.length;
+    if (!isValidIndex(ix)) {
+      return undefined;
     }
 
-    this.first = function() {
+    var item = self.items[ix];
 
-        return lookForNextValidItem(0);
-    };
-
-    this.last = function() {
-
-        return lookForPrevValidItem(this.items.length - 1);
-    };
-
-    this.isFirstItem = function(item) {
-
-        return self.first() === item;
-    };
-
-    this.isLastItem = function(item) {
-
-        return self.last() === item;
-    };
-
-    this.item = function(index) {
-		
-		if (isValidIndex(index))
-        	return self.items[index];
-			
-		return undefined;
-    };
-
-    this.isRightToLeft = function() {
-
-        return self.direction == "rtl";
-    };
-
-    this.isLeftToRight = function() {
-
-        return !self.isRightToLeft();
-    };
-
-    this.getItemById = function(idref) {
-
-        var length = self.items.length;
-
-        for(var i = 0; i < length; i++) {
-            if(self.items[i].idref == idref) {
-
-                return self.items[i];
-            }
-        }
-
-        return undefined;
-    };
-
-    this.getItemByHref = function(href) {
-
-        var length = self.items.length;
-
-        for(var i = 0; i < length; i++) {
-            if(self.items[i].href == href) {
-
-                return self.items[i];
-            }
-        }
-
-        return undefined;
-    };
-
-    function updateSpineItemsSpread() {
-
-        var len = self.items.length;
-
-        var isFirstPageInSpread = false;
-        var baseSide = self.isLeftToRight() ? SpineItemConstants.SPREAD_LEFT : SpineItemConstants.SPREAD_RIGHT;
-
-        for(var i = 0; i < len; i++) {
-
-            var spineItem = self.items[i];
-            if( !spineItem.page_spread) {
-
-                var spread = spineItem.isRenditionSpreadAllowed() ? (isFirstPageInSpread ? baseSide : SpineItem.alternateSpread(baseSide)) : SpineItemConstants.SPREAD_CENTER;
-                spineItem.setSpread(spread);
-            }
-
-            isFirstPageInSpread = !spineItem.isRenditionSpreadAllowed() || spineItem.page_spread != baseSide;
-        }
+    if (isValidLinearItem(item)) {
+      return item;
     }
 
-    if(spineDTO) {
+    return lookForPrevValidItem(item.index - 1);
+  }
 
-        if(spineDTO.direction) {
-            this.direction = spineDTO.direction;
-        }
+  this.nextItem = function(item) {
 
-        var length = spineDTO.items.length;
-        for(var i = 0; i < length; i++) {
-            var item = new SpineItem(spineDTO.items[i], i, this);
-            this.items.push(item);
-        }
+    return lookForNextValidItem(item.index + 1);
+  };
 
-        updateSpineItemsSpread();
+  this.getItemUrl = function(item) {
+
+    return self.package.resolveRelativeUrl(item.href);
+
+  };
+
+  function isValidIndex(index) {
+
+    return index >= 0 && index < self.items.length;
+  }
+
+  this.first = function() {
+
+    return lookForNextValidItem(0);
+  };
+
+  this.last = function() {
+
+    return lookForPrevValidItem(this.items.length - 1);
+  };
+
+  this.isFirstItem = function(item) {
+
+    return self.first() === item;
+  };
+
+  this.isLastItem = function(item) {
+
+    return self.last() === item;
+  };
+
+  this.item = function(index) {
+
+    if (isValidIndex(index))
+      return self.items[index];
+
+    return undefined;
+  };
+
+  this.isRightToLeft = function() {
+
+    return self.direction == "rtl";
+  };
+
+  this.isLeftToRight = function() {
+
+    return !self.isRightToLeft();
+  };
+
+  this.getItemById = function(idref) {
+
+    var length = self.items.length;
+
+    for (var i = 0; i < length; i++) {
+      if (self.items[i].idref == idref) {
+
+        return self.items[i];
+      }
     }
+
+    return undefined;
+  };
+
+  this.getItemByHref = function(href) {
+
+    var length = self.items.length;
+
+    for (var i = 0; i < length; i++) {
+      if (self.items[i].href == href) {
+
+        return self.items[i];
+      }
+    }
+
+    return undefined;
+  };
+
+  function updateSpineItemsSpread() {
+
+    var len = self.items.length;
+
+    var isFirstPageInSpread = false;
+    var baseSide = self.isLeftToRight() ? SpineItemConstants.SPREAD_LEFT : SpineItemConstants.SPREAD_RIGHT;
+
+    for (var i = 0; i < len; i++) {
+
+      var spineItem = self.items[i];
+      if (!spineItem.page_spread) {
+
+        var spread = spineItem.isRenditionSpreadAllowed() ? (isFirstPageInSpread ? baseSide : SpineItem.alternateSpread(baseSide)) : SpineItemConstants.SPREAD_CENTER;
+        spineItem.setSpread(spread);
+      }
+
+      isFirstPageInSpread = !spineItem.isRenditionSpreadAllowed() || spineItem.page_spread != baseSide;
+    }
+  }
+
+  if (spineDTO) {
+
+    if (spineDTO.direction) {
+      this.direction = spineDTO.direction;
+    }
+
+    var length = spineDTO.items.length;
+    for (var i = 0; i < length; i++) {
+      var item = new SpineItem(spineDTO.items[i], i, this);
+      this.items.push(item);
+    }
+
+    updateSpineItemsSpread();
+  }
 
 };
 

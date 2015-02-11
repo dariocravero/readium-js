@@ -7,14 +7,14 @@ var ViewsConstants = require('../views/constants')
  */
 function getOrientation($viewport) {
 
-    var viewportWidth = $viewport.width();
-    var viewportHeight = $viewport.height();
+  var viewportWidth = $viewport.width();
+  var viewportHeight = $viewport.height();
 
-    if(!viewportWidth || !viewportHeight) {
-        return undefined;
-    }
+  if (!viewportWidth || !viewportHeight) {
+    return undefined;
+  }
 
-    return viewportWidth >= viewportHeight ? ViewsConstants.ORIENTATION_LANDSCAPE : ViewsConstants.ORIENTATION_PORTRAIT;
+  return viewportWidth >= viewportHeight ? ViewsConstants.ORIENTATION_LANDSCAPE : ViewsConstants.ORIENTATION_PORTRAIT;
 };
 
 module.exports = getOrientation

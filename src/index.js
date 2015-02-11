@@ -1,4 +1,4 @@
 module.exports = {
   Reader: require('./reader'),
-  SDK:    require('./sdk')
+  SDK: require('./sdk')
 }

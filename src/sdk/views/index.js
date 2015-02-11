@@ -3,7 +3,7 @@ var _ = require('underscore')
 
 var Views = {
   IFrameLoader: require('./iframe-loader'),
-  ReaderView:   require('./reader-view')
+  ReaderView: require('./reader-view')
 }
 
 var ViewsConstants = require('./constants')

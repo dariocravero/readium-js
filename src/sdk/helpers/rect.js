@@ -8,30 +8,30 @@
  */
 function Rect(left, top, width, height) {
 
-    this.left = left;
-    this.top = top;
-    this.width = width;
-    this.height = height;
+  this.left = left;
+  this.top = top;
+  this.width = width;
+  this.height = height;
 
-    this.right = function () {
-        return this.left + this.width;
-    };
+  this.right = function() {
+    return this.left + this.width;
+  };
 
-    this.bottom = function() {
-        return this.top + this.height;
-    };
+  this.bottom = function() {
+    return this.top + this.height;
+  };
 
-    this.isOverlap = function(rect, tolerance) {
+  this.isOverlap = function(rect, tolerance) {
 
-        if(tolerance == undefined) {
-            tolerance = 0;
-        }
-
-        return !(rect.right() < this.left + tolerance ||
-            rect.left > this.right() - tolerance ||
-            rect.bottom() < this.top + tolerance ||
-            rect.top > this.bottom() - tolerance);
+    if (tolerance == undefined) {
+      tolerance = 0;
     }
+
+    return !(rect.right() < this.left + tolerance ||
+      rect.left > this.right() - tolerance ||
+      rect.bottom() < this.top + tolerance ||
+      rect.top > this.bottom() - tolerance);
+  }
 };
 
 /**
@@ -44,29 +44,28 @@ function Rect(left, top, width, height) {
 // reflows between columns this is inconstant and difficult to analyze .
 Rect.fromElement = function($element) {
 
-    var e;
-    if (_.isArray($element) || $element instanceof jQuery)
-       e = $element[0];
-    else
-        e = $element;
-    // TODODM this is somewhat hacky. Text (range?) elements don't have a position so we have to ask the parent.
-    if (e.nodeType === 3)
-    {
-        e = $element.parent()[0];
-    }
+  var e;
+  if (_.isArray($element) || $element instanceof jQuery)
+    e = $element[0];
+  else
+    e = $element;
+  // TODODM this is somewhat hacky. Text (range?) elements don't have a position so we have to ask the parent.
+  if (e.nodeType === 3) {
+    e = $element.parent()[0];
+  }
 
 
-    var offsetLeft = e.offsetLeft;
-    var offsetTop = e.offsetTop;
-    var offsetWidth = e.offsetWidth;
-    var offsetHeight = e.offsetHeight;
+  var offsetLeft = e.offsetLeft;
+  var offsetTop = e.offsetTop;
+  var offsetWidth = e.offsetWidth;
+  var offsetHeight = e.offsetHeight;
 
-    while(e = e.offsetParent) {
-        offsetLeft += e.offsetLeft;
-        offsetTop += e.offsetTop;
-    }
+  while (e = e.offsetParent) {
+    offsetLeft += e.offsetLeft;
+    offsetTop += e.offsetTop;
+  }
 
-    return new Rect(offsetLeft, offsetTop, offsetWidth, offsetHeight);
+  return new Rect(offsetLeft, offsetTop, offsetWidth, offsetHeight);
 };
 
 module.exports = Rect

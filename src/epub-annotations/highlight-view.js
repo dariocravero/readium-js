@@ -1,88 +1,88 @@
 var Backbone = require('Backbone')
-var Highlight             = require('./highlight')
+var Highlight = require('./highlight')
 
 var HighlightView = Backbone.View.extend({
 
-    el : "<div class='highlight'></div>",
+  el: "<div class='highlight'></div>",
 
-    events : {
-        "mouseenter" : "highlightEvent",
-        "mouseleave" : "highlightEvent",
-        "click" : "highlightEvent",
-        "contextmenu" : "highlightEvent"
-    },
+  events: {
+    "mouseenter": "highlightEvent",
+    "mouseleave": "highlightEvent",
+    "click": "highlightEvent",
+    "contextmenu": "highlightEvent"
+  },
 
-    initialize : function (options) {
+  initialize: function(options) {
 
-        this.highlight = new Highlight({
-            CFI : options.CFI,
-            top : options.top,
-            left : options.left,
-            height : options.height,
-            width : options.width,
-            styles: options.styles,
-            highlightGroupCallback : options.highlightGroupCallback,
-            callbackContext : options.callbackContext
-        });
-    },
+    this.highlight = new Highlight({
+      CFI: options.CFI,
+      top: options.top,
+      left: options.left,
+      height: options.height,
+      width: options.width,
+      styles: options.styles,
+      highlightGroupCallback: options.highlightGroupCallback,
+      callbackContext: options.callbackContext
+    });
+  },
 
-    render : function () {
+  render: function() {
 
-        this.setCSS();
-        return this.el;
-    },
+    this.setCSS();
+    return this.el;
+  },
 
-    resetPosition : function (top, left, height, width) {
+  resetPosition: function(top, left, height, width) {
 
-        this.highlight.set({
-            top : top,
-            left : left,
-            height : height,
-            width : width
-        });
-        this.setCSS();
-    },
+    this.highlight.set({
+      top: top,
+      left: left,
+      height: height,
+      width: width
+    });
+    this.setCSS();
+  },
 
-    setStyles : function (styles) {
+  setStyles: function(styles) {
 
-        this.highlight.set({
-            styles : styles,
-        });
-        this.render();
-    },
+    this.highlight.set({
+      styles: styles,
+    });
+    this.render();
+  },
 
-    setCSS : function () {
+  setCSS: function() {
 
-        var styles = this.highlight.get("styles") || {};
-        
-        this.$el.css({ 
-            "top" : this.highlight.get("top") + "px",
-            "left" : this.highlight.get("left") + "px",
-            "height" : this.highlight.get("height") + "px",
-            "width" : this.highlight.get("width") + "px",
-            "background-color" : styles.fill_color || "normal",
-        });
-    },
+    var styles = this.highlight.get("styles") || {};
 
-    setBaseHighlight : function () {
+    this.$el.css({
+      "top": this.highlight.get("top") + "px",
+      "left": this.highlight.get("left") + "px",
+      "height": this.highlight.get("height") + "px",
+      "width": this.highlight.get("width") + "px",
+      "background-color": styles.fill_color || "normal",
+    });
+  },
 
-        this.$el.addClass("highlight");
-        this.$el.removeClass("hover-highlight");
-    },
+  setBaseHighlight: function() {
 
-    setHoverHighlight : function () {
+    this.$el.addClass("highlight");
+    this.$el.removeClass("hover-highlight");
+  },
 
-        this.$el.addClass("hover-highlight");
-        this.$el.removeClass("highlight");
-    },
+  setHoverHighlight: function() {
 
-    highlightEvent : function (event) {
+    this.$el.addClass("hover-highlight");
+    this.$el.removeClass("highlight");
+  },
 
-        event.stopPropagation();
-        var highlightGroupCallback = this.highlight.get("highlightGroupCallback");
-        var highlightGroupContext = this.highlight.get("callbackContext");
-        highlightGroupContext.highlightGroupCallback(event);
-    }
+  highlightEvent: function(event) {
+
+    event.stopPropagation();
+    var highlightGroupCallback = this.highlight.get("highlightGroupCallback");
+    var highlightGroupContext = this.highlight.get("callbackContext");
+    highlightGroupContext.highlightGroupCallback(event);
+  }
 });
 
 module.exports = HighlightView

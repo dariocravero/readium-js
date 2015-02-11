@@ -36,7 +36,7 @@ function ZipResourceFetcher(parentFetcher, baseUrl, libDir) {
 
       zip.workerScriptsPath = libDir;
       _zipFs = new zip.fs.FS();
-      _zipFs.importHttpContent(baseUrl, true, function () {
+      _zipFs.importHttpContent(baseUrl, true, function() {
 
         callback(_zipFs, onerror);
 
@@ -44,13 +44,13 @@ function ZipResourceFetcher(parentFetcher, baseUrl, libDir) {
     }
   }
 
-  function fetchFileContents (relativePathRelativeToPackageRoot, readCallback, onerror) {
+  function fetchFileContents(relativePathRelativeToPackageRoot, readCallback, onerror) {
 
     if (typeof relativePathRelativeToPackageRoot === 'undefined') {
       throw 'Fetched file relative path is undefined!';
     }
 
-    withZipFsPerform(function (zipFs, onerror) {
+    withZipFsPerform(function(zipFs, onerror) {
       var entry = zipFs.find(relativePathRelativeToPackageRoot);
       if (typeof entry === 'undefined' || entry === null) {
         onerror(new Error('Entry ' + relativePathRelativeToPackageRoot + ' not found in zip ' + baseUrl));
@@ -73,15 +73,15 @@ function ZipResourceFetcher(parentFetcher, baseUrl, libDir) {
 
   this.fetchFileContentsText = function(relativePathRelativeToPackageRoot, fetchCallback, onerror) {
 
-    fetchFileContents(relativePathRelativeToPackageRoot, function (entry) {
+    fetchFileContents(relativePathRelativeToPackageRoot, function(entry) {
       entry.getText(fetchCallback, undefined, _checkCrc32);
     }, onerror)
   };
 
   this.fetchFileContentsData64Uri = function(relativePathRelativeToPackageRoot, fetchCallback, onerror) {
-    fetchFileContents(relativePathRelativeToPackageRoot, function (entry) {
+    fetchFileContents(relativePathRelativeToPackageRoot, function(entry) {
       entry.getData64URI(ContentTypeDiscovery.identifyContentTypeFromFileName(relativePathRelativeToPackageRoot),
-                         fetchCallback, undefined, _checkCrc32);
+        fetchCallback, undefined, _checkCrc32);
     }, onerror)
   };
 
@@ -89,15 +89,15 @@ function ZipResourceFetcher(parentFetcher, baseUrl, libDir) {
     var decryptionFunction = parentFetcher.getDecryptionFunctionForRelativePath(relativePathRelativeToPackageRoot);
     if (decryptionFunction) {
       var origFetchCallback = fetchCallback;
-      fetchCallback = function (unencryptedBlob) {
-        decryptionFunction(unencryptedBlob, function (decryptedBlob) {
+      fetchCallback = function(unencryptedBlob) {
+        decryptionFunction(unencryptedBlob, function(decryptedBlob) {
           origFetchCallback(decryptedBlob);
         });
       };
     }
-    fetchFileContents(relativePathRelativeToPackageRoot, function (entry) {
+    fetchFileContents(relativePathRelativeToPackageRoot, function(entry) {
       entry.getBlob(ContentTypeDiscovery.identifyContentTypeFromFileName(relativePathRelativeToPackageRoot), fetchCallback,
-                    undefined, _checkCrc32);
+        undefined, _checkCrc32);
     }, onerror)
   };
 

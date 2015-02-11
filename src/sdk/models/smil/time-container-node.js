@@ -2,72 +2,60 @@ var SmilNode = require('./smil-node')
 
 function TimeContainerNode(parent) {
 
-    this.parent = parent;
-    
-    this.children = undefined;
-    this.index = undefined;
-    
-    this.epubtype = "";
+  this.parent = parent;
 
-    this.isEscapable = function(userEscapables)
-    {
-        if (this.epubtype === "")
-        {
-            return false;
-        }
+  this.children = undefined;
+  this.index = undefined;
 
-        var smilModel = this.getSmil();
-        if (!smilModel.mo)
-        {
-            return false;
-        }
+  this.epubtype = "";
 
-        var arr = smilModel.mo.escapables;
-        if (userEscapables.length > 0)
-        {
-            arr = userEscapables;
-        }
+  this.isEscapable = function(userEscapables) {
+    if (this.epubtype === "") {
+      return false;
+    }
 
-        for (var i = 0; i < arr.length; i++)
-        {
-            if (this.epubtype.indexOf(arr[i]) >= 0)
-            {
-                return true;
-            }
-        }
+    var smilModel = this.getSmil();
+    if (!smilModel.mo) {
+      return false;
+    }
 
-        return false;
-    };
+    var arr = smilModel.mo.escapables;
+    if (userEscapables.length > 0) {
+      arr = userEscapables;
+    }
 
-    this.isSkippable = function(userSkippables)
-    {
-        if (this.epubtype === "")
-        {
-            return false;
-        }
-        
-        var smilModel = this.getSmil();
-        if (!smilModel.mo)
-        {
-            return false;
-        }
+    for (var i = 0; i < arr.length; i++) {
+      if (this.epubtype.indexOf(arr[i]) >= 0) {
+        return true;
+      }
+    }
 
-        var arr = smilModel.mo.skippables;
-        if (userSkippables.length > 0)
-        {
-            arr = userSkippables;
-        }
+    return false;
+  };
 
-        for (var i = 0; i < arr.length; i++)
-        {
-            if (this.epubtype.indexOf(arr[i]) >= 0)
-            {
-                return true;
-            }
-        }
+  this.isSkippable = function(userSkippables) {
+    if (this.epubtype === "") {
+      return false;
+    }
 
-        return false;
-    };
+    var smilModel = this.getSmil();
+    if (!smilModel.mo) {
+      return false;
+    }
+
+    var arr = smilModel.mo.skippables;
+    if (userSkippables.length > 0) {
+      arr = userSkippables;
+    }
+
+    for (var i = 0; i < arr.length; i++) {
+      if (this.epubtype.indexOf(arr[i]) >= 0) {
+        return true;
+      }
+    }
+
+    return false;
+  };
 };
 
 TimeContainerNode.prototype = new SmilNode()

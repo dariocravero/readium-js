@@ -33,29 +33,29 @@
  * @property {boolean} needsFixedLayoutScalerWorkAround
  */
 
-var _                         = require('underscore')
-var $                         = require('jquery')
-var AnnotationsManager        = require('./annotations-manager')
-var Backbone                  = require('backbone')
-var Events                    = require('../events')
-var extendedThrottle          = require('../helpers/extended-throttle')
-var FixedView                 = require('./fixed-view')
-var IFrameLoader              = require('./iframe-loader')
-var InternalEvents            = require('../internal-events')
-var InternalLinksSupport      = require('./internal-links-support')
+var _ = require('underscore')
+var $ = require('jquery')
+var AnnotationsManager = require('./annotations-manager')
+var Backbone = require('backbone')
+var Events = require('../events')
+var extendedThrottle = require('../helpers/extended-throttle')
+var FixedView = require('./fixed-view')
+var IFrameLoader = require('./iframe-loader')
+var InternalEvents = require('../internal-events')
+var InternalLinksSupport = require('./internal-links-support')
 var isIframeAlive = require('../helpers/is-iframe-alive')
-var MediaOverlayDataInjector  = require('./media-overlay-data-injector')
-var MediaOverlayPlayer        = require('./media-overlay-player')
-var Package                   = require('../models/package')
-var PageOpenRequest           = require('../models/page-open-request')
-var ReflowableView            = require('./reflowable-view')
+var MediaOverlayDataInjector = require('./media-overlay-data-injector')
+var MediaOverlayPlayer = require('./media-overlay-player')
+var Package = require('../models/package')
+var PageOpenRequest = require('../models/page-open-request')
+var ReflowableView = require('./reflowable-view')
 var ResolveContentRef = require('../helpers/resolve-content-ref')
-var ScrollView                = require('./scroll-view')
+var ScrollView = require('./scroll-view')
 var setStyles = require('../helpers/set-styles')
-var StyleCollection           = require('../collections/style')
+var StyleCollection = require('../collections/style')
 var Switches = require('../models/switches')
 var Trigger = require('../models/trigger')
-var ViewerSettings            = require('../models/viewer-settings')
+var ViewerSettings = require('../models/viewer-settings')
 
 /**
  * View Type
@@ -78,1484 +78,1419 @@ var VIEW_TYPE_SCROLLED_CONTINUOUS = 4;
  */
 function ReaderView(options) {
 
-    _.extend(this, Backbone.Events);
+  _.extend(this, Backbone.Events);
 
-    var self = this;
-    var _currentView = undefined;
-    var _package = undefined;
-    var _spine = undefined;
-    var _viewerSettings = new ViewerSettings({});
-    //styles applied to the container divs
-    var _userStyles = new StyleCollection();
-    //styles applied to the content documents
-    var _bookStyles = new StyleCollection();
-    var _internalLinksSupport = new InternalLinksSupport(this);
-    var _mediaOverlayPlayer;
-    var _mediaOverlayDataInjector;
-    var _iframeLoader;
-    var _$el;
-    var _annotationsManager = new AnnotationsManager(self, options);
-    
-    //We will call onViewportResize after user stopped resizing window
-    var lazyResize = extendedThrottle(
-        handleViewportResizeStart,
-        handleViewportResizeTick,
-        handleViewportResizeEnd, 250, 1000, self);
+  var self = this;
+  var _currentView = undefined;
+  var _package = undefined;
+  var _spine = undefined;
+  var _viewerSettings = new ViewerSettings({});
+  //styles applied to the container divs
+  var _userStyles = new StyleCollection();
+  //styles applied to the content documents
+  var _bookStyles = new StyleCollection();
+  var _internalLinksSupport = new InternalLinksSupport(this);
+  var _mediaOverlayPlayer;
+  var _mediaOverlayDataInjector;
+  var _iframeLoader;
+  var _$el;
+  var _annotationsManager = new AnnotationsManager(self, options);
 
-    $(window).on("resize.ReadiumSDK.readerView", lazyResize);
+  //We will call onViewportResize after user stopped resizing window
+  var lazyResize = extendedThrottle(
+    handleViewportResizeStart,
+    handleViewportResizeTick,
+    handleViewportResizeEnd, 250, 1000, self);
 
-    if (options.el instanceof $) {
-        _$el = options.el;
-        console.log("** EL is a jQuery selector:" + options.el.attr('id'));
+  $(window).on("resize.ReadiumSDK.readerView", lazyResize);
+
+  if (options.el instanceof $) {
+    _$el = options.el;
+    console.log("** EL is a jQuery selector:" + options.el.attr('id'));
+  } else {
+    _$el = $(options.el);
+    console.log("** EL is a string:" + _$el.attr('id'));
+  }
+
+  if (options.iframeLoader) {
+    _iframeLoader = options.iframeLoader;
+  } else {
+    _iframeLoader = new IFrameLoader({
+      mathJaxUrl: options.mathJaxUrl
+    });
+  }
+
+
+  _needsFixedLayoutScalerWorkAround = options.needsFixedLayoutScalerWorkAround;
+  /**
+   * @returns {boolean}
+   */
+  this.needsFixedLayoutScalerWorkAround = function() {
+    return _needsFixedLayoutScalerWorkAround;
+  }
+
+  /**
+   * Create a view based on the given view type.
+   * @param {ReadiumSDK.Views.ReaderView.ViewType} viewType
+   * @param {ReadiumSDK.Views.ReaderView.ViewCreationOptions} options
+   * @returns {*}
+   */
+  this.createViewForType = function(viewType, options) {
+    var createdView;
+
+    // NOTE: _$el == options.$viewport
+    _$el.css("overflow", "hidden");
+
+    switch (viewType) {
+      case VIEW_TYPE_FIXED:
+
+        _$el.css("overflow", "auto"); // for content pan, see self.setZoom()
+
+        createdView = new FixedView(options, self);
+        break;
+      case VIEW_TYPE_SCROLLED_DOC:
+        createdView = new ScrollView(options, false, self);
+        break;
+      case VIEW_TYPE_SCROLLED_CONTINUOUS:
+        createdView = new ScrollView(options, true, self);
+        break;
+      default:
+        createdView = new ReflowableView(options, self);
+        break;
+    }
+
+    return createdView;
+  };
+
+  /**
+   * Returns the current view type of the reader view
+   * @returns {ReaderView.ViewType}
+   */
+  this.getCurrentViewType = function() {
+
+    if (!_currentView) {
+      return undefined;
+    }
+
+    if (_currentView instanceof ReflowableView) {
+      return VIEW_TYPE_COLUMNIZED;
+    }
+
+    if (_currentView instanceof FixedView) {
+      return VIEW_TYPE_FIXED;
+    }
+
+    if (_currentView instanceof ScrollView) {
+      if (_currentView.isContinuousScroll()) {
+        return VIEW_TYPE_SCROLLED_CONTINUOUS;
+      }
+
+      return VIEW_TYPE_SCROLLED_DOC;
+    }
+
+    console.error("Unrecognized view type");
+    return undefined;
+  };
+
+  //based on https://docs.google.com/spreadsheet/ccc?key=0AoPMUkQhc4wcdDI0anFvWm96N0xRT184ZE96MXFRdFE&usp=drive_web#gid=0 document
+  function deduceDesiredViewType(spineItem) {
+
+    //check settings
+    if (_viewerSettings.scroll == "scroll-doc") {
+      return VIEW_TYPE_SCROLLED_DOC;
+    }
+
+    if (_viewerSettings.scroll == "scroll-continuous") {
+      return VIEW_TYPE_SCROLLED_CONTINUOUS;
+    }
+
+    //is fixed layout ignore flow
+    if (spineItem.isFixedLayout()) {
+      return VIEW_TYPE_FIXED;
+    }
+
+    //flow
+    if (spineItem.isFlowScrolledDoc()) {
+      return VIEW_TYPE_SCROLLED_DOC;
+    }
+
+    if (spineItem.isFlowScrolledContinuous()) {
+      return VIEW_TYPE_SCROLLED_CONTINUOUS;
+    }
+
+    return VIEW_TYPE_COLUMNIZED;
+  }
+
+  // returns true is view changed
+  function initViewForItem(spineItem, callback) {
+
+    var desiredViewType = deduceDesiredViewType(spineItem);
+
+    if (_currentView) {
+
+      if (self.getCurrentViewType() == desiredViewType) {
+        callback(false);
+        return;
+      }
+
+      resetCurrentView();
+    }
+
+    /**
+     * View creation options
+     * @typedef {object} ReadiumSDK.Views.ReaderView.ViewCreationOptions
+     * @property {jQueryElement} $viewport  The view port element the reader view has created.
+     * @property {Models.Spine} spine The spine item collection object
+     * @property {ReadiumSDK.Collections.StyleCollection} userStyles User styles
+     * @property {ReadiumSDK.Collections.StyleCollection} bookStyles Book styles
+     * @property {ReadiumSDK.Views.IFrameLoader} iframeLoader   An instance of an iframe loader or one expanding it.
+     */
+    var viewCreationParams = {
+      $viewport: _$el,
+      spine: _spine,
+      userStyles: _userStyles,
+      bookStyles: _bookStyles,
+      iframeLoader: _iframeLoader
+    };
+
+
+    _currentView = self.createViewForType(desiredViewType, viewCreationParams);
+    self.trigger(Events.READER_VIEW_CREATED, desiredViewType);
+
+    _currentView.on(Events.CONTENT_DOCUMENT_LOADED, function($iframe, spineItem) {
+
+      if (!isIframeAlive($iframe[0])) return;
+
+      // performance degrades with large DOM (e.g. word-level text-audio sync)
+      _mediaOverlayDataInjector.attachMediaOverlayData($iframe, spineItem, _viewerSettings);
+
+      _internalLinksSupport.processLinkElements($iframe, spineItem);
+      _annotationsManager.attachAnnotations($iframe, spineItem);
+
+      var contentDoc = $iframe[0].contentDocument;
+      Trigger.register(contentDoc);
+      Switches.apply(contentDoc);
+
+      self.trigger(Events.CONTENT_DOCUMENT_LOADED, $iframe, spineItem);
+    });
+
+    _currentView.on(Events.CONTENT_DOCUMENT_LOAD_START, function($iframe, spineItem) {
+      self.trigger(Events.CONTENT_DOCUMENT_LOAD_START, $iframe, spineItem);
+    });
+
+    _currentView.on(InternalEvents.CURRENT_VIEW_PAGINATION_CHANGED, function(pageChangeData) {
+
+      //we call on onPageChanged explicitly instead of subscribing to the ReadiumSDK.Events.PAGINATION_CHANGED by
+      //mediaOverlayPlayer because we hve to guarantee that mediaOverlayPlayer will be updated before the host
+      //application will be notified by the same ReadiumSDK.Events.PAGINATION_CHANGED event
+      _mediaOverlayPlayer.onPageChanged(pageChangeData);
+
+      self.trigger(Events.PAGINATION_CHANGED, pageChangeData);
+    });
+
+    _currentView.on(Events.FXL_VIEW_RESIZED, function() {
+      self.trigger(Events.FXL_VIEW_RESIZED);
+    })
+
+    _currentView.render();
+    _currentView.setViewSettings(_viewerSettings);
+
+    // we do this to wait until elements are rendered otherwise book is not able to determine view size.
+    setTimeout(function() {
+
+      callback(true);
+
+    }, 50);
+
+  }
+
+  /**
+   * Returns a list of the currently active spine items
+   *
+   * @returns {Models.SpineItem[]}
+   */
+  this.getLoadedSpineItems = function() {
+
+    if (_currentView) {
+      return _currentView.getLoadedSpineItems();
+    }
+
+    return [];
+  };
+
+  function resetCurrentView() {
+
+    if (!_currentView) {
+      return;
+    }
+
+    self.trigger(Events.READER_VIEW_DESTROYED);
+
+    _currentView.off(InternalEvents.CURRENT_VIEW_PAGINATION_CHANGED);
+    _currentView.remove();
+    _currentView = undefined;
+  }
+
+  /**
+   * Returns the currently instanced viewer settings
+   *
+   * @returns {Models.ViewerSettings}
+   */
+  this.viewerSettings = function() {
+    return _viewerSettings;
+  };
+
+  /**
+   * Returns a data object based on the package document
+   *
+   * @returns {Models.Package}
+   */
+  this.package = function() {
+    return _package;
+  };
+
+  /**
+   * Returns a representation of the spine as a data object, also acts as list of spine items
+   *
+   * @returns {Models.Spine}
+   */
+  this.spine = function() {
+    return _spine;
+  };
+
+  /**
+   * Returns the user CSS styles collection
+   *
+   * @returns {ReadiumSDK.Collections.StyleCollection}
+   */
+  this.userStyles = function() {
+    return _userStyles;
+  };
+
+  /**
+   * Open Book Data
+   *
+   * @typedef {object} ReadiumSDK.Views.ReaderView.OpenBookData
+   * @property {Models.Package} package - packageData (required)
+   * @property {Models.PageOpenRequest} openPageRequest - openPageRequestData, (optional) data related to open page request
+   * @property {ReadiumSDK.Views.ReaderView.SettingsData} [settings]
+   * @property {ReadiumSDK.Collections.StyleCollection} styles: [cssStyles]
+   * @todo Define missing types
+   */
+
+  /**
+   * Triggers the process of opening the book and requesting resources specified in the packageData
+   *
+   * @param {ReadiumSDK.Views.ReaderView.OpenBookData} openBookData - object with open book data
+   */
+  this.openBook = function(openBookData) {
+
+    var packageData = openBookData.package ? openBookData.package : openBookData;
+
+    _package = new Package(packageData);
+
+    _spine = _package.spine;
+    _spine.handleLinear(true);
+
+    if (_mediaOverlayPlayer) {
+      _mediaOverlayPlayer.reset();
+    }
+
+    _mediaOverlayPlayer = new MediaOverlayPlayer(self, $.proxy(onMediaPlayerStatusChanged, self));
+    _mediaOverlayPlayer.setAutomaticNextSmil(_viewerSettings.mediaOverlaysAutomaticPageTurn ? true : false); // just to ensure the internal var is set to the default settings (user settings are applied below at self.updateSettings(openBookData.settings);)
+
+    _mediaOverlayDataInjector = new MediaOverlayDataInjector(_package.media_overlay, _mediaOverlayPlayer);
+
+
+    resetCurrentView();
+
+    if (openBookData.settings) {
+      self.updateSettings(openBookData.settings);
+    }
+
+    if (openBookData.styles) {
+      self.setStyles(openBookData.styles);
+    }
+
+    var pageRequestData = undefined;
+
+    if (openBookData.openPageRequest) {
+
+      if (openBookData.openPageRequest.idref || (openBookData.openPageRequest.contentRefUrl && openBookData.openPageRequest.sourceFileHref)) {
+        pageRequestData = openBookData.openPageRequest;
+      } else {
+        console.log("Invalid page request data: idref required!");
+      }
+    }
+
+    var fallback = false;
+    if (pageRequestData) {
+
+      pageRequestData = openBookData.openPageRequest;
+
+      try {
+        if (pageRequestData.idref) {
+
+          if (pageRequestData.spineItemPageIndex) {
+            fallback = !self.openSpineItemPage(pageRequestData.idref, pageRequestData.spineItemPageIndex, self);
+          } else if (pageRequestData.elementCfi) {
+            fallback = !self.openSpineItemElementCfi(pageRequestData.idref, pageRequestData.elementCfi, self);
+          } else {
+            fallback = !self.openSpineItemPage(pageRequestData.idref, 0, self);
+          }
+        } else {
+          fallback = !self.openContentUrl(pageRequestData.contentRefUrl, pageRequestData.sourceFileHref, self);
+        }
+      } catch (err) {
+        console.error("openPageRequest fail: fallback to first page!")
+        console.log(err);
+        fallback = true;
+      }
     } else {
-        _$el = $(options.el);
-        console.log("** EL is a string:" + _$el.attr('id'));
+      fallback = true;
     }
 
-    if(options.iframeLoader) {
-        _iframeLoader = options.iframeLoader;
-    }
-    else {
-        _iframeLoader = new IFrameLoader({ mathJaxUrl: options.mathJaxUrl});
-    }
+    if (fallback) { // if we where not asked to open specific page we will open the first one
 
+      var spineItem = _spine.first();
+      if (spineItem) {
+        var pageOpenRequest = new PageOpenRequest(spineItem, self);
+        pageOpenRequest.setFirstPage();
+        openPage(pageOpenRequest, 0);
+      }
 
-    _needsFixedLayoutScalerWorkAround = options.needsFixedLayoutScalerWorkAround;
-    /**
-     * @returns {boolean}
-     */
-    this.needsFixedLayoutScalerWorkAround = function() { return _needsFixedLayoutScalerWorkAround; }
-
-    /**
-     * Create a view based on the given view type.
-     * @param {ReadiumSDK.Views.ReaderView.ViewType} viewType
-     * @param {ReadiumSDK.Views.ReaderView.ViewCreationOptions} options
-     * @returns {*}
-     */
-    this.createViewForType = function(viewType, options) {
-        var createdView;
-
-        // NOTE: _$el == options.$viewport
-        _$el.css("overflow", "hidden");
-        
-        switch(viewType) {
-            case VIEW_TYPE_FIXED:
-
-                _$el.css("overflow", "auto"); // for content pan, see self.setZoom()
-                
-                createdView = new FixedView(options, self);
-                break;
-            case VIEW_TYPE_SCROLLED_DOC:
-                createdView = new ScrollView(options, false, self);
-                break;
-            case VIEW_TYPE_SCROLLED_CONTINUOUS:
-                createdView = new ScrollView(options, true, self);
-                break;
-            default:
-                createdView = new ReflowableView(options, self);
-                break;
-        }
-
-        return createdView;
-    };
-
-    /**
-     * Returns the current view type of the reader view
-     * @returns {ReaderView.ViewType}
-     */
-    this.getCurrentViewType = function() {
-
-        if(!_currentView) {
-            return undefined;
-        }
-
-        if(_currentView instanceof ReflowableView) {
-            return VIEW_TYPE_COLUMNIZED;
-        }
-
-        if(_currentView instanceof FixedView) {
-            return VIEW_TYPE_FIXED;
-        }
-
-        if(_currentView instanceof ScrollView) {
-            if(_currentView.isContinuousScroll()) {
-                return VIEW_TYPE_SCROLLED_CONTINUOUS;
-            }
-
-            return VIEW_TYPE_SCROLLED_DOC;
-        }
-
-        console.error("Unrecognized view type");
-        return undefined;
-    };
-
-    //based on https://docs.google.com/spreadsheet/ccc?key=0AoPMUkQhc4wcdDI0anFvWm96N0xRT184ZE96MXFRdFE&usp=drive_web#gid=0 document
-    function deduceDesiredViewType(spineItem) {
-
-        //check settings
-        if(_viewerSettings.scroll == "scroll-doc") {
-            return VIEW_TYPE_SCROLLED_DOC;
-        }
-
-        if(_viewerSettings.scroll == "scroll-continuous") {
-            return VIEW_TYPE_SCROLLED_CONTINUOUS;
-        }
-
-        //is fixed layout ignore flow
-        if(spineItem.isFixedLayout()) {
-            return VIEW_TYPE_FIXED;
-        }
-
-        //flow
-        if(spineItem.isFlowScrolledDoc()) {
-            return VIEW_TYPE_SCROLLED_DOC;
-        }
-
-        if(spineItem.isFlowScrolledContinuous()) {
-            return VIEW_TYPE_SCROLLED_CONTINUOUS;
-        }
-
-        return VIEW_TYPE_COLUMNIZED;
     }
 
-    // returns true is view changed
-    function initViewForItem(spineItem, callback) {
+  };
 
-        var desiredViewType = deduceDesiredViewType(spineItem);
+  function onMediaPlayerStatusChanged(status) {
+    self.trigger(Events.MEDIA_OVERLAY_STATUS_CHANGED, status);
+  }
 
-        if(_currentView) {
+  /**
+   * Flips the page from left to right.
+   * Takes to account the page progression direction to decide to flip to prev or next page.
+   */
+  this.openPageLeft = function() {
 
-            if(self.getCurrentViewType() == desiredViewType) {
-                callback(false);
-                return;
-            }
+    if (_package.spine.isLeftToRight()) {
+      self.openPagePrev();
+    } else {
+      self.openPageNext();
+    }
+  };
 
-            resetCurrentView();
+  /**
+   * Flips the page from right to left.
+   * Takes to account the page progression direction to decide to flip to prev or next page.
+   */
+  this.openPageRight = function() {
+
+    if (_package.spine.isLeftToRight()) {
+      self.openPageNext();
+    } else {
+      self.openPagePrev();
+    }
+
+  };
+
+  /**
+   * Returns if the current child view is an instance of a fixed page view
+   *
+   * @returns {boolean}
+   */
+  this.isCurrentViewFixedLayout = function() {
+    return _currentView instanceof FixedView;
+  };
+
+  /**
+   * Zoom options
+   *
+   * @typedef {object} ReadiumSDK.Views.ReaderView.ZoomOptions
+   * @property {string} style - "user"|"fit-screen"|"fit-width"
+   * @property {number} scale - 0.0 to 1.0
+   */
+
+  /**
+   * Set the zoom options.
+   *
+   * @param {ReadiumSDK.Views.ReaderView.ZoomOptions} zoom Zoom options
+   */
+  this.setZoom = function(zoom) {
+    // zoom only handled by fixed layout views 
+    if (self.isCurrentViewFixedLayout()) {
+      _currentView.setZoom(zoom);
+    }
+  };
+
+  /**
+   * Returns the current view scale as a percentage
+   *
+   * @returns {number}
+   */
+  this.getViewScale = function() {
+    if (self.isCurrentViewFixedLayout()) {
+      return 100 * _currentView.getViewScale();
+    } else {
+      return 100;
+    }
+  };
+
+  /**
+   * Settings Data
+   *
+   * @typedef {object} ReadiumSDK.Views.ReaderView.SettingsData
+   * @property {number} fontSize - Font size as percentage
+   * @property {(string|boolean)} syntheticSpread - "auto"|true|false
+   * @property {(string|boolean)} scroll - "auto"|true|false
+   * @property {boolean} doNotUpdateView - Indicates whether the view should be updated after the settings are applied
+   * @property {boolean} mediaOverlaysEnableClick - Indicates whether media overlays are interactive on mouse clicks
+   */
+
+  /**
+   * Updates reader view based on the settings specified in settingsData object
+   *
+   * @param {ReadiumSDK.Views.ReaderView.SettingsData} settingsData Settings data
+   * @fires ReadiumSDK.Events.SETTINGS_APPLIED
+   */
+  this.updateSettings = function(settingsData) {
+
+    //console.debug("UpdateSettings: " + JSON.stringify(settingsData));
+
+    _viewerSettings.update(settingsData);
+
+    if (_mediaOverlayPlayer) {
+      _mediaOverlayPlayer.setAutomaticNextSmil(_viewerSettings.mediaOverlaysAutomaticPageTurn ? true : false);
+    }
+
+    if (_currentView && !settingsData.doNotUpdateView) {
+
+      var bookMark = _currentView.bookmarkCurrentPage();
+
+      if (bookMark && bookMark.idref) {
+
+        var wasPlaying = false;
+        if (_currentView.isReflowable && _currentView.isReflowable()) {
+          wasPlaying = self.isPlayingMediaOverlay();
+          if (wasPlaying) {
+            self.pauseMediaOverlay();
+          }
         }
 
-        /**
-         * View creation options
-         * @typedef {object} ReadiumSDK.Views.ReaderView.ViewCreationOptions
-         * @property {jQueryElement} $viewport  The view port element the reader view has created.
-         * @property {Models.Spine} spine The spine item collection object
-         * @property {ReadiumSDK.Collections.StyleCollection} userStyles User styles
-         * @property {ReadiumSDK.Collections.StyleCollection} bookStyles Book styles
-         * @property {ReadiumSDK.Views.IFrameLoader} iframeLoader   An instance of an iframe loader or one expanding it.
-         */
-        var viewCreationParams = {
-            $viewport: _$el,
-            spine: _spine,
-            userStyles: _userStyles,
-            bookStyles: _bookStyles,
-            iframeLoader: _iframeLoader
-        };
+        var spineItem = _spine.getItemById(bookMark.idref);
 
+        initViewForItem(spineItem, function(isViewChanged) {
 
-        _currentView = self.createViewForType(desiredViewType, viewCreationParams);
-        self.trigger(Events.READER_VIEW_CREATED, desiredViewType);
+          if (!isViewChanged) {
+            _currentView.setViewSettings(_viewerSettings);
+          }
 
-        _currentView.on(Events.CONTENT_DOCUMENT_LOADED, function($iframe, spineItem) {
+          self.openSpineItemElementCfi(bookMark.idref, bookMark.contentCFI, self);
 
-            if (!isIframeAlive($iframe[0])) return;
+          if (wasPlaying) {
+            self.playMediaOverlay();
+            // setTimeout(function()
+            // {
+            // }, 60);
+          }
 
-            // performance degrades with large DOM (e.g. word-level text-audio sync)
-            _mediaOverlayDataInjector.attachMediaOverlayData($iframe, spineItem, _viewerSettings);
-            
-            _internalLinksSupport.processLinkElements($iframe, spineItem);
-            _annotationsManager.attachAnnotations($iframe, spineItem);
-
-            var contentDoc = $iframe[0].contentDocument;
-            Trigger.register(contentDoc);
-            Switches.apply(contentDoc);
-
-            self.trigger(Events.CONTENT_DOCUMENT_LOADED, $iframe, spineItem);
+          self.trigger(Events.SETTINGS_APPLIED);
+          return;
         });
+      }
+    }
 
-        _currentView.on(Events.CONTENT_DOCUMENT_LOAD_START, function ($iframe, spineItem) {
-            self.trigger(Events.CONTENT_DOCUMENT_LOAD_START, $iframe, spineItem);
-        });
+    self.trigger(Events.SETTINGS_APPLIED);
+  };
 
-        _currentView.on(InternalEvents.CURRENT_VIEW_PAGINATION_CHANGED, function( pageChangeData ){
+  /**
+   * Opens the next page.
+   */
+  this.openPageNext = function() {
 
-            //we call on onPageChanged explicitly instead of subscribing to the ReadiumSDK.Events.PAGINATION_CHANGED by
-            //mediaOverlayPlayer because we hve to guarantee that mediaOverlayPlayer will be updated before the host
-            //application will be notified by the same ReadiumSDK.Events.PAGINATION_CHANGED event
-            _mediaOverlayPlayer.onPageChanged(pageChangeData);
+    if (self.getCurrentViewType() === VIEW_TYPE_SCROLLED_CONTINUOUS) {
+      _currentView.openPageNext(self);
+      return;
+    }
 
-            self.trigger(Events.PAGINATION_CHANGED, pageChangeData);
-        });
+    var paginationInfo = _currentView.getPaginationInfo();
 
-        _currentView.on(Events.FXL_VIEW_RESIZED, function(){
-            self.trigger(Events.FXL_VIEW_RESIZED);
-        })
+    if (paginationInfo.openPages.length == 0) {
+      return;
+    }
 
-        _currentView.render();
+    var lastOpenPage = paginationInfo.openPages[paginationInfo.openPages.length - 1];
+
+    if (lastOpenPage.spineItemPageIndex < lastOpenPage.spineItemPageCount - 1) {
+      _currentView.openPageNext(self);
+      return;
+    }
+
+    var currentSpineItem = _spine.getItemById(lastOpenPage.idref);
+
+    var nextSpineItem = _spine.nextItem(currentSpineItem);
+
+    if (!nextSpineItem) {
+      return;
+    }
+
+    var openPageRequest = new PageOpenRequest(nextSpineItem, self);
+    openPageRequest.setFirstPage();
+
+    openPage(openPageRequest, 2);
+  };
+
+  /**
+   * Opens the previous page.
+   */
+  this.openPagePrev = function() {
+
+    if (self.getCurrentViewType() === VIEW_TYPE_SCROLLED_CONTINUOUS) {
+      _currentView.openPagePrev(self);
+      return;
+    }
+
+    var paginationInfo = _currentView.getPaginationInfo();
+
+    if (paginationInfo.openPages.length == 0) {
+      return;
+    }
+
+    var firstOpenPage = paginationInfo.openPages[0];
+
+    if (firstOpenPage.spineItemPageIndex > 0) {
+      _currentView.openPagePrev(self);
+      return;
+    }
+
+    var currentSpineItem = _spine.getItemById(firstOpenPage.idref);
+
+    var prevSpineItem = _spine.prevItem(currentSpineItem);
+
+    if (!prevSpineItem) {
+      return;
+    }
+
+    var openPageRequest = new PageOpenRequest(prevSpineItem, self);
+    openPageRequest.setLastPage();
+
+    openPage(openPageRequest, 1);
+  };
+
+  function getSpineItem(idref) {
+
+    if (!idref) {
+
+      console.log("idref parameter value missing!");
+      return undefined;
+    }
+
+    var spineItem = _spine.getItemById(idref);
+    if (!spineItem) {
+      console.log("Spine item with id " + idref + " not found!");
+      return undefined;
+    }
+
+    return spineItem;
+
+  }
+
+  /**
+   * Opens the page of the spine item with element with provided cfi
+   *
+   * @param {string} idref Id of the spine item
+   * @param {string} elementCfi CFI of the element to be shown
+   * @param {object} initiator optional
+   */
+  this.openSpineItemElementCfi = function(idref, elementCfi, initiator) {
+
+    var spineItem = getSpineItem(idref);
+
+    if (!spineItem) {
+      return false;
+    }
+
+    var pageData = new PageOpenRequest(spineItem, initiator);
+    if (elementCfi) {
+      pageData.setElementCfi(elementCfi);
+    }
+
+    openPage(pageData, 0);
+
+    return true;
+  };
+
+  /**
+   * Opens specified page index of the current spine item
+   *
+   * @param {number} pageIndex Zero based index of the page in the current spine item
+   * @param {object} initiator optional
+   */
+  this.openPageIndex = function(pageIndex, initiator) {
+
+    if (!_currentView) {
+      return false;
+    }
+
+    var pageRequest;
+
+    if (_package.isFixedLayout()) {
+      var spineItem = _spine.items[pageIndex];
+      if (!spineItem) {
+        return false;
+      }
+
+      pageRequest = new PageOpenRequest(spineItem, initiator);
+      pageRequest.setPageIndex(0);
+    } else {
+
+      var spineItems = this.getLoadedSpineItems();
+      if (spineItems.length > 0) {
+        pageRequest = new PageOpenRequest(spineItems[0], initiator);
+        pageRequest.setPageIndex(pageIndex);
+      }
+    }
+
+    openPage(pageRequest, 0);
+
+    return true;
+  };
+
+  // dir: 0 => new or same page, 1 => previous, 2 => next
+  function openPage(pageRequest, dir) {
+
+    initViewForItem(pageRequest.spineItem, function(isViewChanged) {
+
+      if (!isViewChanged) {
         _currentView.setViewSettings(_viewerSettings);
+      }
 
-        // we do this to wait until elements are rendered otherwise book is not able to determine view size.
-        setTimeout(function(){
+      _currentView.openPage(pageRequest, dir);
+    });
+  }
 
-            callback(true);
 
-        }, 50);
+  /**
+   * Opens page index of the spine item with idref provided
+   *
+   * @param {string} idref Id of the spine item
+   * @param {number} pageIndex Zero based index of the page in the spine item
+   * @param {object} initiator optional
+   */
+  this.openSpineItemPage = function(idref, pageIndex, initiator) {
 
+    var spineItem = getSpineItem(idref);
+
+    if (!spineItem) {
+      return false;
     }
 
-    /**
-     * Returns a list of the currently active spine items
-     *
-     * @returns {Models.SpineItem[]}
-     */
-    this.getLoadedSpineItems = function() {
-
-        if(_currentView) {
-            return _currentView.getLoadedSpineItems();
-        }
-
-        return [];
-    };
-
-    function resetCurrentView() {
-
-        if(!_currentView) {
-            return;
-        }
-
-        self.trigger(Events.READER_VIEW_DESTROYED);
-
-        _currentView.off(InternalEvents.CURRENT_VIEW_PAGINATION_CHANGED);
-        _currentView.remove();
-        _currentView = undefined;
+    var pageData = new PageOpenRequest(spineItem, initiator);
+    if (pageIndex) {
+      pageData.setPageIndex(pageIndex);
     }
 
-    /**
-     * Returns the currently instanced viewer settings
-     *
-     * @returns {Models.ViewerSettings}
-     */
-    this.viewerSettings = function() {
-        return _viewerSettings;
-    };
+    openPage(pageData, 0);
 
-    /**
-     * Returns a data object based on the package document
-     *
-     * @returns {Models.Package}
-     */
-    this.package = function() {
-        return _package;
-    };
+    return true;
+  };
 
-    /**
-     * Returns a representation of the spine as a data object, also acts as list of spine items
-     *
-     * @returns {Models.Spine}
-     */
-    this.spine = function() {
-        return _spine;
-    };
+  /**
+   * Set CSS Styles to the reader container
+   *
+   * @param {ReadiumSDK.Collections.StyleCollection} styles   Style collection containing selector property and declarations object
+   * @param {boolean} doNotUpdateView                         Whether to update the view after the styles are applied.
+   */
+  this.setStyles = function(styles, doNotUpdateView) {
 
-    /**
-     * Returns the user CSS styles collection
-     *
-     * @returns {ReadiumSDK.Collections.StyleCollection}
-     */
-    this.userStyles = function() {
-        return _userStyles;
-    };
+    var count = styles.length;
 
-    /**
-     * Open Book Data
-     *
-     * @typedef {object} ReadiumSDK.Views.ReaderView.OpenBookData
-     * @property {Models.Package} package - packageData (required)
-     * @property {Models.PageOpenRequest} openPageRequest - openPageRequestData, (optional) data related to open page request
-     * @property {ReadiumSDK.Views.ReaderView.SettingsData} [settings]
-     * @property {ReadiumSDK.Collections.StyleCollection} styles: [cssStyles]
-     * @todo Define missing types
-     */
-
-    /**
-     * Triggers the process of opening the book and requesting resources specified in the packageData
-     *
-     * @param {ReadiumSDK.Views.ReaderView.OpenBookData} openBookData - object with open book data
-     */
-    this.openBook = function(openBookData) {
-
-		var packageData = openBookData.package ? openBookData.package : openBookData;
-
-        _package = new Package(packageData);
-
-        _spine = _package.spine;
-        _spine.handleLinear(true);
-
-        if(_mediaOverlayPlayer) {
-            _mediaOverlayPlayer.reset();
-        }
-
-        _mediaOverlayPlayer = new MediaOverlayPlayer(self, $.proxy(onMediaPlayerStatusChanged, self));
-        _mediaOverlayPlayer.setAutomaticNextSmil(_viewerSettings.mediaOverlaysAutomaticPageTurn ? true : false); // just to ensure the internal var is set to the default settings (user settings are applied below at self.updateSettings(openBookData.settings);)
-        
-        _mediaOverlayDataInjector = new MediaOverlayDataInjector(_package.media_overlay, _mediaOverlayPlayer);
-
-
-        resetCurrentView();
-
-        if(openBookData.settings) {
-            self.updateSettings(openBookData.settings);
-        }
-
-        if(openBookData.styles) {
-            self.setStyles(openBookData.styles);
-        }
-
-        var pageRequestData = undefined;
-
-        if(openBookData.openPageRequest) {
-
-            if(openBookData.openPageRequest.idref || (openBookData.openPageRequest.contentRefUrl && openBookData.openPageRequest.sourceFileHref)) {
-                pageRequestData = openBookData.openPageRequest;
-            }
-            else {
-                console.log("Invalid page request data: idref required!");
-            }
-        }
-
-        var  fallback = false; 
-        if(pageRequestData) {
-
-            pageRequestData = openBookData.openPageRequest;
-
-            try {
-                if(pageRequestData.idref) {
-
-                    if(pageRequestData.spineItemPageIndex) {
-                        fallback = !self.openSpineItemPage(pageRequestData.idref, pageRequestData.spineItemPageIndex, self);
-                    }
-                    else if(pageRequestData.elementCfi) {
-                        fallback = !self.openSpineItemElementCfi(pageRequestData.idref, pageRequestData.elementCfi, self);
-                    }
-                    else {
-                        fallback = !self.openSpineItemPage(pageRequestData.idref, 0, self);
-                    }
-                }
-                else {
-                    fallback = !self.openContentUrl(pageRequestData.contentRefUrl, pageRequestData.sourceFileHref, self);
-                }
-            } catch (err) {
-                console.error("openPageRequest fail: fallback to first page!")
-                console.log(err);
-                fallback = true;
-            }
-        }
-        else { fallback = true; }
-        
-        if (fallback) {// if we where not asked to open specific page we will open the first one
-
-            var spineItem = _spine.first();
-            if(spineItem) {
-                var pageOpenRequest = new PageOpenRequest(spineItem, self);
-                pageOpenRequest.setFirstPage();
-                openPage(pageOpenRequest, 0);
-            }
-
-        }
-
-    };
-
-    function onMediaPlayerStatusChanged(status) {
-        self.trigger(Events.MEDIA_OVERLAY_STATUS_CHANGED, status);
+    for (var i = 0; i < count; i++) {
+      if (styles[i].declarations) {
+        _userStyles.addStyle(styles[i].selector, styles[i].declarations);
+      } else {
+        _userStyles.removeStyle(styles[i].selector);
+      }
     }
 
-    /**
-     * Flips the page from left to right.
-     * Takes to account the page progression direction to decide to flip to prev or next page.
-     */
-    this.openPageLeft = function() {
+    applyStyles(doNotUpdateView);
 
-        if(_package.spine.isLeftToRight()) {
-            self.openPagePrev();
-        }
-        else {
-            self.openPageNext();
-        }
-    };
+  };
 
-    /**
-     * Flips the page from right to left.
-     * Takes to account the page progression direction to decide to flip to prev or next page.
-     */
-    this.openPageRight = function() {
+  /**
+   * Set CSS Styles to the content documents
+   *
+   * @param {ReadiumSDK.Collections.StyleCollection} styles    Style collection containing selector property and declarations object
+   */
+  this.setBookStyles = function(styles) {
 
-        if(_package.spine.isLeftToRight()) {
-            self.openPageNext();
-        }
-        else {
-            self.openPagePrev();
-        }
+    var count = styles.length;
 
-    };
-
-    /**
-     * Returns if the current child view is an instance of a fixed page view
-     *
-     * @returns {boolean}
-     */
-    this.isCurrentViewFixedLayout = function() {
-        return _currentView instanceof FixedView;
-    };
-
-    /**
-     * Zoom options
-     *
-     * @typedef {object} ReadiumSDK.Views.ReaderView.ZoomOptions
-     * @property {string} style - "user"|"fit-screen"|"fit-width"
-     * @property {number} scale - 0.0 to 1.0
-     */
-
-    /**
-     * Set the zoom options.
-     *
-     * @param {ReadiumSDK.Views.ReaderView.ZoomOptions} zoom Zoom options
-     */
-    this.setZoom = function(zoom) {
-        // zoom only handled by fixed layout views 
-        if (self.isCurrentViewFixedLayout()) {
-            _currentView.setZoom(zoom);
-        }
-    };
-
-    /**
-     * Returns the current view scale as a percentage
-     *
-     * @returns {number}
-     */
-    this.getViewScale = function() {
-        if (self.isCurrentViewFixedLayout()) {
-            return 100 * _currentView.getViewScale();
-        }
-        else {
-            return 100;
-        }
-    };
-
-    /**
-     * Settings Data
-     *
-     * @typedef {object} ReadiumSDK.Views.ReaderView.SettingsData
-     * @property {number} fontSize - Font size as percentage
-     * @property {(string|boolean)} syntheticSpread - "auto"|true|false
-     * @property {(string|boolean)} scroll - "auto"|true|false
-     * @property {boolean} doNotUpdateView - Indicates whether the view should be updated after the settings are applied
-     * @property {boolean} mediaOverlaysEnableClick - Indicates whether media overlays are interactive on mouse clicks
-     */
-
-    /**
-     * Updates reader view based on the settings specified in settingsData object
-     *
-     * @param {ReadiumSDK.Views.ReaderView.SettingsData} settingsData Settings data
-     * @fires ReadiumSDK.Events.SETTINGS_APPLIED
-     */
-    this.updateSettings = function(settingsData) {
-
-//console.debug("UpdateSettings: " + JSON.stringify(settingsData));
-
-        _viewerSettings.update(settingsData);
-        
-        if (_mediaOverlayPlayer)
-        {
-            _mediaOverlayPlayer.setAutomaticNextSmil(_viewerSettings.mediaOverlaysAutomaticPageTurn ? true : false);
-        }
-        
-        if(_currentView && !settingsData.doNotUpdateView) {
-
-            var bookMark = _currentView.bookmarkCurrentPage();
-
-            if(bookMark && bookMark.idref) {
-     
-                var wasPlaying = false;
-                if (_currentView.isReflowable && _currentView.isReflowable())
-                {
-                    wasPlaying = self.isPlayingMediaOverlay();
-                    if (wasPlaying)
-                    {
-                        self.pauseMediaOverlay();
-                    }
-                }
-
-                var spineItem = _spine.getItemById(bookMark.idref);
-                
-                initViewForItem(spineItem, function(isViewChanged){
-
-                    if(!isViewChanged) {
-                        _currentView.setViewSettings(_viewerSettings);
-                    }
-
-                    self.openSpineItemElementCfi(bookMark.idref, bookMark.contentCFI, self);
-
-                    if (wasPlaying)
-                    {
-                        self.playMediaOverlay();
-                        // setTimeout(function()
-                        // {
-                        // }, 60);
-                    }
-
-                    self.trigger(Events.SETTINGS_APPLIED);
-                    return;
-                });
-            }
-        }
-
-        self.trigger(Events.SETTINGS_APPLIED);
-    };
-
-    /**
-     * Opens the next page.
-     */
-    this.openPageNext = function() {
-
-        if(self.getCurrentViewType() === VIEW_TYPE_SCROLLED_CONTINUOUS) {
-            _currentView.openPageNext(self);
-            return;
-        }
-
-        var paginationInfo = _currentView.getPaginationInfo();
-
-        if(paginationInfo.openPages.length == 0) {
-            return;
-        }
-
-        var lastOpenPage = paginationInfo.openPages[paginationInfo.openPages.length - 1];
-
-        if(lastOpenPage.spineItemPageIndex < lastOpenPage.spineItemPageCount - 1) {
-            _currentView.openPageNext(self);
-            return;
-        }
-
-        var currentSpineItem = _spine.getItemById(lastOpenPage.idref);
-
-        var nextSpineItem = _spine.nextItem(currentSpineItem);
-
-        if(!nextSpineItem) {
-            return;
-        }
-
-        var openPageRequest = new PageOpenRequest(nextSpineItem, self);
-        openPageRequest.setFirstPage();
-
-        openPage(openPageRequest, 2);
-    };
-
-    /**
-     * Opens the previous page.
-     */
-    this.openPagePrev = function() {
-
-        if(self.getCurrentViewType() === VIEW_TYPE_SCROLLED_CONTINUOUS) {
-            _currentView.openPagePrev(self);
-            return;
-        }
-
-        var paginationInfo = _currentView.getPaginationInfo();
-
-        if(paginationInfo.openPages.length == 0) {
-            return;
-        }
-
-        var firstOpenPage = paginationInfo.openPages[0];
-
-        if(firstOpenPage.spineItemPageIndex > 0) {
-            _currentView.openPagePrev(self);
-            return;
-        }
-
-        var currentSpineItem = _spine.getItemById(firstOpenPage.idref);
-
-        var prevSpineItem = _spine.prevItem(currentSpineItem);
-
-        if(!prevSpineItem) {
-            return;
-        }
-
-        var openPageRequest = new PageOpenRequest(prevSpineItem, self);
-        openPageRequest.setLastPage();
-
-        openPage(openPageRequest, 1);
-    };
-
-    function getSpineItem(idref) {
-
-        if(!idref) {
-
-            console.log("idref parameter value missing!");
-            return undefined;
-        }
-
-        var spineItem = _spine.getItemById(idref);
-        if(!spineItem) {
-            console.log("Spine item with id " + idref + " not found!");
-            return undefined;
-        }
-
-        return spineItem;
-
+    for (var i = 0; i < count; i++) {
+      _bookStyles.addStyle(styles[i].selector, styles[i].declarations);
     }
 
-    /**
-     * Opens the page of the spine item with element with provided cfi
-     *
-     * @param {string} idref Id of the spine item
-     * @param {string} elementCfi CFI of the element to be shown
-     * @param {object} initiator optional
-     */
-    this.openSpineItemElementCfi = function(idref, elementCfi, initiator) {
+    if (_currentView) {
+      _currentView.applyBookStyles();
+    }
 
-        var spineItem = getSpineItem(idref);
+  };
 
-        if(!spineItem) {
-            return false;
-        }
+  /**
+   * Gets an element from active content documents based on a query selector.
+   *
+   * @param {Models.SpineItem} spineItem       The spine item object associated with an active content document
+   * @param {string} selector                      The query selector
+   * @returns {HTMLElement|undefined}
+   */
+  this.getElement = function(spineItem, selector) {
 
-        var pageData = new PageOpenRequest(spineItem, initiator);
-        if(elementCfi) {
-            pageData.setElementCfi(elementCfi);
-        }
+    if (_currentView) {
+      return _currentView.getElement(spineItem, selector);
+    }
 
-        openPage(pageData, 0);
-        
-        return true;
-    };
+    return undefined;
+  };
 
-    /**
-     * Opens specified page index of the current spine item
-     *
-     * @param {number} pageIndex Zero based index of the page in the current spine item
-     * @param {object} initiator optional
-     */
-    this.openPageIndex = function(pageIndex, initiator) {
+  /**
+   * Gets an element from active content documents based on an element id.
+   *
+   * @param {Models.SpineItem} spineItem      The spine item object associated with an active content document
+   * @param {string} id                                  The element id
+   * @returns {HTMLElement|undefined}
+   */
+  this.getElementById = function(spineItem, id) {
 
-        if(!_currentView) {
-            return false;
-        }
+    if (_currentView) {
+      return _currentView.getElementById(spineItem, id);
+    }
 
-        var pageRequest;
+    return undefined;
+  };
 
-        if(_package.isFixedLayout()) {
-            var spineItem = _spine.items[pageIndex];
-            if(!spineItem) {
-                return false;
-            }
+  /**
+   * Gets an element from active content documents based on a content CFI.
+   *
+   * @param {Models.SpineItem} spineItem     The spine item idref associated with an active content document
+   * @param {string} cfi                                The partial content CFI
+   * @param {string[]} [classBlacklist]
+   * @param {string[]} [elementBlacklist]
+   * @param {string[]} [idBlacklist]
+   * @returns {HTMLElement|undefined}
+   */
+  this.getElementByCfi = function(spineItem, cfi, classBlacklist, elementBlacklist, idBlacklist) {
 
-            pageRequest = new PageOpenRequest(spineItem, initiator);
-            pageRequest.setPageIndex(0);
-        }
-        else {
+    if (_currentView) {
+      return _currentView.getElementByCfi(spineItem, cfi, classBlacklist, elementBlacklist, idBlacklist);
+    }
 
-            var spineItems = this.getLoadedSpineItems();
-            if(spineItems.length > 0) {
-                pageRequest = new PageOpenRequest(spineItems[0], initiator);
-                pageRequest.setPageIndex(pageIndex);
-            }
-        }
+    return undefined;
 
-        openPage(pageRequest, 0);
-        
-        return true;
-    };
+  };
 
-    // dir: 0 => new or same page, 1 => previous, 2 => next
-    function openPage(pageRequest, dir) {
+  function applyStyles(doNotUpdateView) {
 
-        initViewForItem(pageRequest.spineItem, function(isViewChanged){
+    setStyles(_userStyles.getStyles(), _$el);
 
-            if(!isViewChanged) {
-                _currentView.setViewSettings(_viewerSettings);
-            }
+    if (_mediaOverlayPlayer)
+      _mediaOverlayPlayer.applyStyles();
 
-            _currentView.openPage(pageRequest, dir);
-        });
+    if (doNotUpdateView) return;
+
+    if (_currentView) {
+      _currentView.applyStyles();
+    }
+  }
+
+  /**
+   * Opens a content url from a media player context
+   *
+   * @param {string} contentRefUrl
+   * @param {string} sourceFileHref
+   * @param offset
+   */
+  this.mediaOverlaysOpenContentUrl = function(contentRefUrl, sourceFileHref, offset) {
+    _mediaOverlayPlayer.mediaOverlaysOpenContentUrl(contentRefUrl, sourceFileHref, offset);
+  };
+
+
+
+  /**
+   * Opens the content document specified by the url
+   *
+   * @param {string} contentRefUrl Url of the content document
+   * @param {string | undefined} sourceFileHref Url to the file that contentRefUrl is relative to. If contentRefUrl is
+   * relative ot the source file that contains it instead of the package file (ex. TOC file) We have to know the
+   * sourceFileHref to resolve contentUrl relative to the package file.
+   * @param {object} initiator optional
+   */
+  this.openContentUrl = function(contentRefUrl, sourceFileHref, initiator) {
+
+    var combinedPath = ResolveContentRef(contentRefUrl, sourceFileHref);
+
+    var hashIndex = combinedPath.indexOf("#");
+    var hrefPart;
+    var elementId;
+    if (hashIndex >= 0) {
+      hrefPart = combinedPath.substr(0, hashIndex);
+      elementId = combinedPath.substr(hashIndex + 1);
+    } else {
+      hrefPart = combinedPath;
+      elementId = undefined;
+    }
+
+    var spineItem = _spine.getItemByHref(hrefPart);
+    if (!spineItem) {
+      console.warn('spineItem ' + hrefPart + ' not found');
+      // sometimes that happens because spine item's URI gets encoded,
+      // yet it's compared with raw strings by `getItemByHref()` -
+      // so we try to search with decoded link as well
+      var decodedHrefPart = decodeURIComponent(hrefPart);
+      spineItem = _spine.getItemByHref(decodedHrefPart);
+      if (!spineItem) {
+        console.warn('decoded spineItem ' + decodedHrefPart + ' missing as well');
+        return false;
+      }
+    }
+
+    return self.openSpineItemElementId(spineItem.idref, elementId, initiator);
+  };
+
+  /**
+   * Opens the page of the spine item with element with provided cfi
+   *
+   * @param {string} idref Id of the spine item
+   * @param {string} elementId id of the element to be shown
+   * @param {object} initiator optional
+   */
+  this.openSpineItemElementId = function(idref, elementId, initiator) {
+
+    var spineItem = _spine.getItemById(idref);
+    if (!spineItem) {
+      return false;
+    }
+
+    var pageData = new PageOpenRequest(spineItem, initiator);
+
+    if (elementId) {
+      pageData.setElementId(elementId);
     }
 
 
-    /**
-     * Opens page index of the spine item with idref provided
-     *
-     * @param {string} idref Id of the spine item
-     * @param {number} pageIndex Zero based index of the page in the spine item
-     * @param {object} initiator optional
-     */
-    this.openSpineItemPage = function(idref, pageIndex, initiator) {
+    openPage(pageData, 0);
 
-        var spineItem = getSpineItem(idref);
+    return true;
+  };
 
-        if(!spineItem) {
-            return false;
+  /**
+   * Returns the bookmark associated with currently opened page.
+   *
+   * @returns {string} Serialized Models.BookmarkData object as JSON string.
+   */
+  this.bookmarkCurrentPage = function() {
+    return JSON.stringify(_currentView.bookmarkCurrentPage());
+  };
+
+  /**
+   * Resets all the custom styles set by setStyle callers at runtime
+   */
+  this.clearStyles = function() {
+
+    _userStyles.resetStyleValues();
+    applyStyles();
+    _userStyles.clear();
+  };
+
+  /**
+   * Resets all the custom styles set by setBookStyle callers at runtime
+   */
+  this.clearBookStyles = function() {
+
+    if (_currentView) {
+
+      _bookStyles.resetStyleValues();
+      _currentView.applyBookStyles();
+    }
+
+    _bookStyles.clear();
+  };
+
+  /**
+   * Returns true if media overlay available for one of the open pages.
+   *
+   * @returns {boolean}
+   */
+  this.isMediaOverlayAvailable = function() {
+
+    if (!_mediaOverlayPlayer) return false;
+
+    return _mediaOverlayPlayer.isMediaOverlayAvailable();
+  };
+
+  /*
+      this.setMediaOverlaySkippables = function(items) {
+
+          _mediaOverlayPlayer.setMediaOverlaySkippables(items);
+      };
+
+      this.setMediaOverlayEscapables = function(items) {
+
+          _mediaOverlayPlayer.setMediaOverlayEscapables(items);
+      };
+  */
+
+  /**
+   * Starts/Stop playing media overlay on current page
+   */
+  this.toggleMediaOverlay = function() {
+
+    _mediaOverlayPlayer.toggleMediaOverlay();
+  };
+
+
+  /**
+   * Plays next fragment media overlay
+   */
+  this.nextMediaOverlay = function() {
+
+    _mediaOverlayPlayer.nextMediaOverlay();
+
+  };
+
+  /**
+   * Plays previous fragment media overlay
+   */
+  this.previousMediaOverlay = function() {
+
+    _mediaOverlayPlayer.previousMediaOverlay();
+
+  };
+
+  /**
+   * Plays next available fragment media overlay that is outside of the current escapable scope
+   */
+  this.escapeMediaOverlay = function() {
+
+    _mediaOverlayPlayer.escape();
+  };
+
+  /**
+   * End media overlay TTS
+   * @todo Clarify what this does with Daniel.
+   */
+  this.ttsEndedMediaOverlay = function() {
+
+    _mediaOverlayPlayer.onTTSEnd();
+  };
+
+  /**
+   * Pause currently playing media overlays.
+   */
+  this.pauseMediaOverlay = function() {
+
+    _mediaOverlayPlayer.pause();
+  };
+
+  /**
+   * Start/Resume playback of media overlays.
+   */
+  this.playMediaOverlay = function() {
+
+    _mediaOverlayPlayer.play();
+  };
+
+  /**
+   * Determine if media overlays are currently playing.
+   * @returns {boolean}
+   */
+  this.isPlayingMediaOverlay = function() {
+
+    return _mediaOverlayPlayer.isPlaying();
+  };
+
+  //
+  // should use ReadiumSDK.Events.SETTINGS_APPLIED instead!
+  //    this.setRateMediaOverlay = function(rate) {
+  //
+  //        _mediaOverlayPlayer.setRate(rate);
+  //    };
+  //    this.setVolumeMediaOverlay = function(volume){
+  //
+  //        _mediaOverlayPlayer.setVolume(volume);
+  //    };
+
+  /**
+   * Get the first visible media overlay element from the currently active content document(s)
+   * @returns {HTMLElement|undefined}
+   */
+  this.getFirstVisibleMediaOverlayElement = function() {
+
+    if (_currentView) {
+      return _currentView.getFirstVisibleMediaOverlayElement();
+    }
+
+    return undefined;
+  };
+
+  /**
+   * Used to jump to an element to make sure it is visible when a content document is paginated
+   * @param {string}      spineItemId   The spine item idref associated with an active content document
+   * @param {HTMLElement} element       The element to make visible
+   * @param [initiator]
+   */
+  this.insureElementVisibility = function(spineItemId, element, initiator) {
+
+    if (_currentView) {
+      _currentView.insureElementVisibility(spineItemId, element, initiator);
+    }
+  };
+
+  var _resizeBookmark = null;
+  var _resizeMOWasPlaying = false;
+
+  function handleViewportResizeStart() {
+
+    _resizeBookmark = null;
+    _resizeMOWasPlaying = false;
+
+    if (_currentView) {
+
+      if (_currentView.isReflowable && _currentView.isReflowable()) {
+        _resizeMOWasPlaying = self.isPlayingMediaOverlay();
+        if (_resizeMOWasPlaying) {
+          self.pauseMediaOverlay();
         }
+      }
 
-        var pageData = new PageOpenRequest(spineItem, initiator);
-        if(pageIndex) {
-            pageData.setPageIndex(pageIndex);
-        }
+      _resizeBookmark = _currentView.bookmarkCurrentPage(); // not self! (JSON string)
+    }
+  }
 
-        openPage(pageData, 0);
-        
-        return true;
+  function handleViewportResizeTick() {
+    if (_currentView) {
+      self.handleViewportResize(_resizeBookmark);
+    }
+  }
+
+  function handleViewportResizeEnd() {
+    //same as doing one final tick for now
+    handleViewportResizeTick();
+
+    if (_resizeMOWasPlaying) self.playMediaOverlay();
+  }
+
+  this.handleViewportResize = function(bookmarkToRestore) {
+    if (!_currentView) return;
+
+    var bookMark = bookmarkToRestore || _currentView.bookmarkCurrentPage(); // not self! (JSON string)
+
+    if (_currentView.isReflowable && _currentView.isReflowable() && bookMark && bookMark.idref) {
+      var spineItem = _spine.getItemById(bookMark.idref);
+
+      initViewForItem(spineItem, function(isViewChanged) {
+        self.openSpineItemElementCfi(bookMark.idref, bookMark.contentCFI, self);
+        return;
+      });
+    } else {
+      _currentView.onViewportResize();
+    }
+  };
+
+  /**
+   * Returns current selection partial Cfi, useful for workflows that need to check whether the user has selected something.
+   *
+   * @returns {object | undefined} partial cfi object or undefined if nothing is selected
+   */
+  this.getCurrentSelectionCfi = function() {
+    return _annotationsManager.getCurrentSelectionCfi();
+  };
+
+  /**
+   * Creates a higlight based on given parameters
+   *
+   * @param {string} spineIdRef    spine idref that defines the partial Cfi
+   * @param {string} cfi           partial CFI (withouth the indirection step) relative to the spine index
+   * @param {string} id            id of the highlight. must be unique
+   * @param {string} type          currently "highlight" only
+   *
+   * @returns {object | undefined} partial cfi object of the created highlight
+   */
+  this.addHighlight = function(spineIdRef, Cfi, id, type, styles) {
+    return _annotationsManager.addHighlight(spineIdRef, Cfi, id, type, styles);
+  };
+
+
+  /**
+   * Creates a higlight based on the current selection
+   *
+   * @param {string} id id of the highlight. must be unique
+   * @param {string} type currently "highlight" only
+   *
+   * @returns {object | undefined} partial cfi object of the created highlight
+   */
+  this.addSelectionHighlight = function(id, type) {
+    return _annotationsManager.addSelectionHighlight(id, type);
+  };
+
+  /**
+   * Removes A given highlight
+   *
+   * @param {string} id  The id associated with the highlight.
+   *
+   * @returns {undefined}
+   *
+   */
+  this.removeHighlight = function(id) {
+    return _annotationsManager.removeHighlight(id);
+  };
+
+  /**
+   *
+   * @param {string} eventName              Event name.
+   * @param {function} callback             Callback function.
+   * @param {object} context                User specified data passed to the callback function.
+   * @returns {undefined}
+   */
+  this.addIFrameEventListener = function(eventName, callback, context) {
+    _iframeLoader.addIFrameEventListener(eventName, callback, context);
+  };
+
+  // TODO Extract
+  var BackgroundAudioTrackManager = function() {
+    var _spineItemIframeMap = {};
+    var _wasPlaying = false;
+
+    var _callback_playPause = undefined;
+    this.setCallback_PlayPause = function(callback) {
+      _callback_playPause = callback;
     };
 
-    /**
-     * Set CSS Styles to the reader container
-     *
-     * @param {ReadiumSDK.Collections.StyleCollection} styles   Style collection containing selector property and declarations object
-     * @param {boolean} doNotUpdateView                         Whether to update the view after the styles are applied.
-     */
-    this.setStyles = function(styles, doNotUpdateView) {
+    var _callback_isAvailable = undefined;
+    this.setCallback_IsAvailable = function(callback) {
+      _callback_isAvailable = callback;
+    };
 
-        var count = styles.length;
+    this.playPause = function(doPlay) {
+      _playPause(doPlay);
+    };
 
-        for(var i = 0; i < count; i++) {
-            if (styles[i].declarations)
-            {
-            _userStyles.addStyle(styles[i].selector, styles[i].declarations);
-        }
-            else
-            {
-                _userStyles.removeStyle(styles[i].selector);
+    var _playPause = function(doPlay) {
+      if (_callback_playPause) {
+        _callback_playPause(doPlay);
+      }
+
+      try {
+        var $iframe = undefined;
+
+        for (var prop in _spineItemIframeMap) {
+          if (!_spineItemIframeMap.hasOwnProperty(prop)) continue;
+
+          var data = _spineItemIframeMap[prop];
+          if (!data || !data.active) continue;
+
+          if ($iframe) console.error("More than one active iframe?? (pagination)");
+
+          $iframe = data["$iframe"];
+          if (!$iframe) continue;
+
+          var $audios = $("audio", $iframe[0].contentDocument);
+
+          $.each($audios, function() {
+
+            var attr = this.getAttribute("epub:type") || this.getAttribute("type");
+
+            if (!attr) return true; // continue
+
+            if (attr.indexOf("ibooks:soundtrack") < 0 && attr.indexOf("media:soundtrack") < 0 && attr.indexOf("media:background") < 0) return true; // continue
+
+            if (doPlay && this.play) {
+              this.play();
+            } else if (this.pause) {
+              this.pause();
             }
+
+            return true; // continue (more than one track?)
+          });
         }
-
-        applyStyles(doNotUpdateView);
-
+      } catch (err) {
+        console.error(err);
+      }
     };
 
-    /**
-     * Set CSS Styles to the content documents
-     *
-     * @param {ReadiumSDK.Collections.StyleCollection} styles    Style collection containing selector property and declarations object
-     */
-    this.setBookStyles = function(styles) {
-
-        var count = styles.length;
-
-        for(var i = 0; i < count; i++) {
-            _bookStyles.addStyle(styles[i].selector, styles[i].declarations);
-        }
-
-        if(_currentView) {
-            _currentView.applyBookStyles();
-        }
-
+    this.setPlayState = function(wasPlaying) {
+      _wasPlaying = wasPlaying;
     };
 
-    /**
-     * Gets an element from active content documents based on a query selector.
-     *
-     * @param {Models.SpineItem} spineItem       The spine item object associated with an active content document
-     * @param {string} selector                      The query selector
-     * @returns {HTMLElement|undefined}
-     */
-    this.getElement = function(spineItem, selector) {
+    self.on(Events.CONTENT_DOCUMENT_LOADED, function($iframe, spineItem) {
+      try {
+        if (spineItem && spineItem.idref && $iframe && $iframe[0]) {
+          // console.log("CONTENT_DOCUMENT_LOADED");
+          // console.debug(spineItem.href);
+          // console.debug(spineItem.idref);
 
-        if(_currentView) {
-            return _currentView.getElement(spineItem, selector);
+          _spineItemIframeMap[spineItem.idref] = {
+            "$iframe": $iframe,
+            href: spineItem.href
+          };
         }
+      } catch (err) {
+        console.error(err);
+      }
+    });
 
-        return undefined;
-    };
+    self.on(Events.PAGINATION_CHANGED, function(pageChangeData) {
+      // console.log("PAGINATION_CHANGED");
+      // console.debug(pageChangeData);
+      // 
+      // if (pageChangeData.spineItem)
+      // {
+      //     console.debug(pageChangeData.spineItem.href);
+      //     console.debug(pageChangeData.spineItem.idref);
+      // }
+      // else
+      // {
+      //     //console.error(pageChangeData);
+      // }
+      // 
+      // if (pageChangeData.paginationInfo && pageChangeData.paginationInfo.openPages && pageChangeData.paginationInfo.openPages.length)
+      // {
+      //     for (var i = 0; i < pageChangeData.paginationInfo.openPages.length; i++)
+      //     {
+      //         console.log(pageChangeData.paginationInfo.openPages[i].idref);
+      //     }
+      // }
 
-    /**
-     * Gets an element from active content documents based on an element id.
-     *
-     * @param {Models.SpineItem} spineItem      The spine item object associated with an active content document
-     * @param {string} id                                  The element id
-     * @returns {HTMLElement|undefined}
-     */
-    this.getElementById = function(spineItem, id) {
+      var atLeastOne = false;
 
-        if(_currentView) {
-            return _currentView.getElementById(spineItem, id);
-        }
+      try {
+        for (var prop in _spineItemIframeMap) {
+          if (!_spineItemIframeMap.hasOwnProperty(prop)) continue;
 
-        return undefined;
-    };
+          var isActive = pageChangeData.spineItem && pageChangeData.spineItem.idref === prop;
 
-    /**
-     * Gets an element from active content documents based on a content CFI.
-     *
-     * @param {Models.SpineItem} spineItem     The spine item idref associated with an active content document
-     * @param {string} cfi                                The partial content CFI
-     * @param {string[]} [classBlacklist]
-     * @param {string[]} [elementBlacklist]
-     * @param {string[]} [idBlacklist]
-     * @returns {HTMLElement|undefined}
-     */
-    this.getElementByCfi = function(spineItem, cfi, classBlacklist, elementBlacklist, idBlacklist) {
+          var isDisplayed = false;
 
-        if(_currentView) {
-            return _currentView.getElementByCfi(spineItem, cfi, classBlacklist, elementBlacklist, idBlacklist);
-        }
+          if (pageChangeData.paginationInfo && pageChangeData.paginationInfo.openPages.length) {
+            var allSame = true;
 
-        return undefined;
-
-    };
-
-    function applyStyles(doNotUpdateView) {
-
-        setStyles(_userStyles.getStyles(), _$el);
-
-        if (_mediaOverlayPlayer)
-            _mediaOverlayPlayer.applyStyles();
-
-        if(doNotUpdateView) return;
-
-        if(_currentView) {
-            _currentView.applyStyles();
-        }
-    }
-
-    /**
-     * Opens a content url from a media player context
-     *
-     * @param {string} contentRefUrl
-     * @param {string} sourceFileHref
-     * @param offset
-     */
-    this.mediaOverlaysOpenContentUrl = function(contentRefUrl, sourceFileHref, offset) {
-        _mediaOverlayPlayer.mediaOverlaysOpenContentUrl(contentRefUrl, sourceFileHref, offset);
-    };
-
-
-   
-    /**
-     * Opens the content document specified by the url
-     *
-     * @param {string} contentRefUrl Url of the content document
-     * @param {string | undefined} sourceFileHref Url to the file that contentRefUrl is relative to. If contentRefUrl is
-     * relative ot the source file that contains it instead of the package file (ex. TOC file) We have to know the
-     * sourceFileHref to resolve contentUrl relative to the package file.
-     * @param {object} initiator optional
-     */
-    this.openContentUrl = function(contentRefUrl, sourceFileHref, initiator) {
-
-        var combinedPath = ResolveContentRef(contentRefUrl, sourceFileHref);
-
-        var hashIndex = combinedPath.indexOf("#");
-        var hrefPart;
-        var elementId;
-        if(hashIndex >= 0) {
-            hrefPart = combinedPath.substr(0, hashIndex);
-            elementId = combinedPath.substr(hashIndex + 1);
-        }
-        else {
-            hrefPart = combinedPath;
-            elementId = undefined;
-        }
-
-        var spineItem = _spine.getItemByHref(hrefPart);
-        if(!spineItem) {
-            console.warn('spineItem ' + hrefPart + ' not found');
-            // sometimes that happens because spine item's URI gets encoded,
-            // yet it's compared with raw strings by `getItemByHref()` -
-            // so we try to search with decoded link as well
-            var decodedHrefPart = decodeURIComponent(hrefPart);
-            spineItem = _spine.getItemByHref(decodedHrefPart);
-            if (!spineItem) {
-                console.warn('decoded spineItem ' + decodedHrefPart + ' missing as well');
-                return false;
+            for (var i = 0; i < pageChangeData.paginationInfo.openPages.length; i++) {
+              if (pageChangeData.paginationInfo.openPages[i].idref === prop) {
+                isDisplayed = true;
+              } else {
+                allSame = false;
+              }
             }
-        }
 
-        return self.openSpineItemElementId(spineItem.idref, elementId, initiator);
-    };
+            if (!isActive && allSame) isActive = true;
+          }
 
-    /**
-     * Opens the page of the spine item with element with provided cfi
-     *
-     * @param {string} idref Id of the spine item
-     * @param {string} elementId id of the element to be shown
-     * @param {object} initiator optional
-     */
-    this.openSpineItemElementId = function(idref, elementId, initiator) {
+          if (isActive || isDisplayed) {
+            var data = _spineItemIframeMap[prop];
+            if (!data) continue;
 
-        var spineItem = _spine.getItemById(idref);
-        if(!spineItem) {
-            return false;
-        }
+            _spineItemIframeMap[prop]["active"] = isActive;
 
-        var pageData = new PageOpenRequest(spineItem, initiator);
+            var $iframe = data["$iframe"];
+            var href = data.href;
 
-        if(elementId){
-            pageData.setElementId(elementId);
-        }
+            var $audios = $("audio", $iframe[0].contentDocument);
+            $.each($audios, function() {
 
+              var attr = this.getAttribute("epub:type") || this.getAttribute("type");
 
-        openPage(pageData, 0);
-        
-        return true;
-    };
+              if (!attr) return true; // continue
 
-    /**
-     * Returns the bookmark associated with currently opened page.
-     *
-     * @returns {string} Serialized Models.BookmarkData object as JSON string.
-     */
-    this.bookmarkCurrentPage = function() {
-        return JSON.stringify(_currentView.bookmarkCurrentPage());
-    };
+              if (attr.indexOf("ibooks:soundtrack") < 0 && attr.indexOf("media:soundtrack") < 0 && attr.indexOf("media:background") < 0) return true; // continue
 
-    /**
-     * Resets all the custom styles set by setStyle callers at runtime
-     */
-    this.clearStyles = function() {
+              this.setAttribute("loop", "loop");
+              this.removeAttribute("autoplay");
 
-        _userStyles.resetStyleValues();
-        applyStyles();
-        _userStyles.clear();
-    };
+              // DEBUG!
+              //this.setAttribute("controls", "controls");
 
-    /**
-     * Resets all the custom styles set by setBookStyle callers at runtime
-     */
-    this.clearBookStyles = function() {
+              if (isActive) {
+                // DEBUG!
+                //$(this).css({border:"2px solid green"});
+              } else {
+                if (this.pause) this.pause();
 
-        if(_currentView) {
+                // DEBUG!
+                //$(this).css({border:"2px solid red"});
+              }
 
-            _bookStyles.resetStyleValues();
-            _currentView.applyBookStyles();
-        }
+              atLeastOne = true;
 
-        _bookStyles.clear();
-    };
-
-    /**
-     * Returns true if media overlay available for one of the open pages.
-     *
-     * @returns {boolean}
-     */
-    this.isMediaOverlayAvailable = function() {
-
-        if (!_mediaOverlayPlayer) return false;
-        
-        return _mediaOverlayPlayer.isMediaOverlayAvailable();
-    };
-
-/*
-    this.setMediaOverlaySkippables = function(items) {
-
-        _mediaOverlayPlayer.setMediaOverlaySkippables(items);
-    };
-
-    this.setMediaOverlayEscapables = function(items) {
-
-        _mediaOverlayPlayer.setMediaOverlayEscapables(items);
-    };
-*/
-
-    /**
-     * Starts/Stop playing media overlay on current page
-     */
-    this.toggleMediaOverlay = function() {
-
-        _mediaOverlayPlayer.toggleMediaOverlay();
-    };
-
-
-    /**
-    * Plays next fragment media overlay
-    */
-   this.nextMediaOverlay = function() {
-
-        _mediaOverlayPlayer.nextMediaOverlay();
-
-   };
-
-    /**
-     * Plays previous fragment media overlay
-     */
-    this.previousMediaOverlay = function() {
-
-        _mediaOverlayPlayer.previousMediaOverlay();
-
-    };
-
-    /**
-     * Plays next available fragment media overlay that is outside of the current escapable scope
-     */
-    this.escapeMediaOverlay = function() {
-
-        _mediaOverlayPlayer.escape();
-    };
-
-    /**
-     * End media overlay TTS
-     * @todo Clarify what this does with Daniel.
-     */
-    this.ttsEndedMediaOverlay = function() {
-
-        _mediaOverlayPlayer.onTTSEnd();
-    };
-
-    /**
-     * Pause currently playing media overlays.
-     */
-    this.pauseMediaOverlay = function() {
-
-        _mediaOverlayPlayer.pause();
-    };
-
-    /**
-     * Start/Resume playback of media overlays.
-     */
-    this.playMediaOverlay = function() {
-
-        _mediaOverlayPlayer.play();
-    };
-
-    /**
-     * Determine if media overlays are currently playing.
-     * @returns {boolean}
-     */
-    this.isPlayingMediaOverlay = function() {
-
-        return _mediaOverlayPlayer.isPlaying();
-    };
-
-//
-// should use ReadiumSDK.Events.SETTINGS_APPLIED instead!
-//    this.setRateMediaOverlay = function(rate) {
-//
-//        _mediaOverlayPlayer.setRate(rate);
-//    };
-//    this.setVolumeMediaOverlay = function(volume){
-//
-//        _mediaOverlayPlayer.setVolume(volume);
-//    };
-
-    /**
-     * Get the first visible media overlay element from the currently active content document(s)
-     * @returns {HTMLElement|undefined}
-     */
-    this.getFirstVisibleMediaOverlayElement = function() {
-
-        if(_currentView) {
-            return _currentView.getFirstVisibleMediaOverlayElement();
-        }
-
-        return undefined;
-    };
-
-    /**
-     * Used to jump to an element to make sure it is visible when a content document is paginated
-     * @param {string}      spineItemId   The spine item idref associated with an active content document
-     * @param {HTMLElement} element       The element to make visible
-     * @param [initiator]
-     */
-    this.insureElementVisibility = function(spineItemId, element, initiator) {
-
-        if(_currentView) {
-            _currentView.insureElementVisibility(spineItemId, element, initiator);
-        }
-    };
-
-    var _resizeBookmark = null;
-    var _resizeMOWasPlaying = false;
-
-    function handleViewportResizeStart() {
-
-        _resizeBookmark = null;
-        _resizeMOWasPlaying = false;
-        
-        if (_currentView) {
-
-            if (_currentView.isReflowable && _currentView.isReflowable()) {
-                _resizeMOWasPlaying = self.isPlayingMediaOverlay();
-                if (_resizeMOWasPlaying) {
-                    self.pauseMediaOverlay();
-                }
-            }
-            
-            _resizeBookmark = _currentView.bookmarkCurrentPage(); // not self! (JSON string)
-        }
-    }
-
-    function handleViewportResizeTick() {
-        if (_currentView) {
-            self.handleViewportResize(_resizeBookmark);
-        }
-    }
-
-    function handleViewportResizeEnd() {
-        //same as doing one final tick for now
-        handleViewportResizeTick();
-        
-        if (_resizeMOWasPlaying) self.playMediaOverlay();
-    }
-
-    this.handleViewportResize = function(bookmarkToRestore)
-    {
-        if (!_currentView) return;
-
-        var bookMark = bookmarkToRestore || _currentView.bookmarkCurrentPage(); // not self! (JSON string)
-
-        if (_currentView.isReflowable && _currentView.isReflowable() && bookMark && bookMark.idref)
-        {
-            var spineItem = _spine.getItemById(bookMark.idref);
-
-            initViewForItem(spineItem, function(isViewChanged)
-            {
-                self.openSpineItemElementCfi(bookMark.idref, bookMark.contentCFI, self);
-                return;
+              return true; // continue (more than one track?)
             });
+
+            continue;
+          } else {
+            if (_spineItemIframeMap[prop]) _spineItemIframeMap[prop]["$iframe"] = undefined;
+            _spineItemIframeMap[prop] = undefined;
+          }
         }
-        else
-        {
-            _currentView.onViewportResize();
+      } catch (err) {
+        console.error(err);
+      }
+
+      if (_callback_isAvailable) {
+        _callback_isAvailable(atLeastOne);
+      }
+
+      if (atLeastOne) {
+        if (_wasPlaying) {
+          _playPause(true);
+        } else {
+          _playPause(false); // ensure correct paused state
         }
-    };
+      } else {
+        _playPause(false); // ensure correct paused state
+      }
+    });
 
-    /**
-     * Returns current selection partial Cfi, useful for workflows that need to check whether the user has selected something.
-     *
-     * @returns {object | undefined} partial cfi object or undefined if nothing is selected
-     */
-    this.getCurrentSelectionCfi =  function() {
-        return _annotationsManager.getCurrentSelectionCfi();
-    };
+    self.on(Events.MEDIA_OVERLAY_STATUS_CHANGED, function(value) {
+      if (!value.smilIndex) return;
+      var package = self.package();
+      var smil = package.media_overlay.smilAt(value.smilIndex);
+      if (!smil || !smil.spineItemId) return;
 
-    /**
-     * Creates a higlight based on given parameters
-     *
-     * @param {string} spineIdRef    spine idref that defines the partial Cfi
-     * @param {string} cfi           partial CFI (withouth the indirection step) relative to the spine index
-     * @param {string} id            id of the highlight. must be unique
-     * @param {string} type          currently "highlight" only
-     *
-     * @returns {object | undefined} partial cfi object of the created highlight
-     */
-    this.addHighlight = function(spineIdRef, Cfi, id, type, styles) {
-        return _annotationsManager.addHighlight(spineIdRef, Cfi, id, type, styles) ;
-    };
-    
+      var needUpdate = false;
+      for (var prop in _spineItemIframeMap) {
+        if (!_spineItemIframeMap.hasOwnProperty(prop)) continue;
 
-    /**
-     * Creates a higlight based on the current selection
-     *
-     * @param {string} id id of the highlight. must be unique
-     * @param {string} type currently "highlight" only
-     *
-     * @returns {object | undefined} partial cfi object of the created highlight
-     */
-    this.addSelectionHighlight =  function(id, type) {
-        return _annotationsManager.addSelectionHighlight(id,type);
-    };
+        var data = _spineItemIframeMap[prop];
+        if (!data) continue;
 
-    /**
-     * Removes A given highlight
-     *
-     * @param {string} id  The id associated with the highlight.
-     *
-     * @returns {undefined} 
-    *
-     */
-    this.removeHighlight = function(id) {
-        return _annotationsManager.removeHighlight(id);
-    }; 
+        if (data.active) {
+          if (prop !== smil.spineItemId) {
+            _playPause(false); // ensure correct paused state
+            data.active = false;
+            needUpdate = true;
+          }
+        }
+      }
 
-    /**
-     *
-     * @param {string} eventName              Event name.
-     * @param {function} callback             Callback function.
-     * @param {object} context                User specified data passed to the callback function.
-     * @returns {undefined}
-     */
-    this.addIFrameEventListener = function(eventName, callback, context) {
-        _iframeLoader.addIFrameEventListener(eventName, callback, context);
-    };
+      if (needUpdate) {
+        for (var prop in _spineItemIframeMap) {
+          if (!_spineItemIframeMap.hasOwnProperty(prop)) continue;
 
-    // TODO Extract
-    var BackgroundAudioTrackManager = function()
-    {
-        var _spineItemIframeMap = {};
-        var _wasPlaying = false;
-    
-        var _callback_playPause = undefined;
-        this.setCallback_PlayPause = function(callback)
-        {
-            _callback_playPause = callback;
-        };
-        
-        var _callback_isAvailable = undefined;
-        this.setCallback_IsAvailable = function(callback)
-        {
-            _callback_isAvailable = callback;
-        };
-    
-        this.playPause = function(doPlay)
-        {
-            _playPause(doPlay);
-        };
-    
-        var _playPause = function(doPlay)
-        {
-            if (_callback_playPause)
-            {
-                _callback_playPause(doPlay);
+          var data = _spineItemIframeMap[prop];
+          if (!data) continue;
+
+          if (!data.active) {
+            if (prop === smil.spineItemId) {
+              data.active = true;
             }
+          }
+        }
 
-            try
-            {
-                var $iframe = undefined;
-        
-                for (var prop in _spineItemIframeMap)
-                {
-                    if (!_spineItemIframeMap.hasOwnProperty(prop)) continue;
-
-                    var data = _spineItemIframeMap[prop];
-                    if (!data || !data.active) continue;
-
-                    if ($iframe) console.error("More than one active iframe?? (pagination)");
-                    
-                    $iframe = data["$iframe"];
-                    if (!$iframe) continue;
-        
-                    var $audios = $("audio", $iframe[0].contentDocument);
-
-                    $.each($audios, function() {
-
-                        var attr = this.getAttribute("epub:type") || this.getAttribute("type");
-
-                        if (!attr) return true; // continue
-
-                        if (attr.indexOf("ibooks:soundtrack") < 0 && attr.indexOf("media:soundtrack") < 0 && attr.indexOf("media:background") < 0) return true; // continue
-
-                        if (doPlay && this.play)
-                        {
-                            this.play();
-                        }
-                        else if (this.pause)
-                        {
-                            this.pause();
-                        }
-                    
-                        return true; // continue (more than one track?)
-                    });
-                }
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        };
-        
-        this.setPlayState = function(wasPlaying)
-        {
-            _wasPlaying = wasPlaying;
-        };
-        
-        self.on(Events.CONTENT_DOCUMENT_LOADED, function ($iframe, spineItem)
-        {
-            try
-            {
-                if (spineItem && spineItem.idref && $iframe && $iframe[0])
-                {
-                    // console.log("CONTENT_DOCUMENT_LOADED");
-                    // console.debug(spineItem.href);
-                    // console.debug(spineItem.idref);
-                    
-                    _spineItemIframeMap[spineItem.idref] = {"$iframe": $iframe, href: spineItem.href};
-                }
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        });
-        
-        self.on(Events.PAGINATION_CHANGED, function (pageChangeData)
-        {
-            // console.log("PAGINATION_CHANGED");
-            // console.debug(pageChangeData);
-            // 
-            // if (pageChangeData.spineItem)
-            // {
-            //     console.debug(pageChangeData.spineItem.href);
-            //     console.debug(pageChangeData.spineItem.idref);
-            // }
-            // else
-            // {
-            //     //console.error(pageChangeData);
-            // }
-            // 
-            // if (pageChangeData.paginationInfo && pageChangeData.paginationInfo.openPages && pageChangeData.paginationInfo.openPages.length)
-            // {
-            //     for (var i = 0; i < pageChangeData.paginationInfo.openPages.length; i++)
-            //     {
-            //         console.log(pageChangeData.paginationInfo.openPages[i].idref);
-            //     }
-            // }
-
-            var atLeastOne = false;
-            
-            try
-            {
-                for (var prop in _spineItemIframeMap)
-                {
-                    if (!_spineItemIframeMap.hasOwnProperty(prop)) continue;
-
-                    var isActive = pageChangeData.spineItem && pageChangeData.spineItem.idref === prop;
-                    
-                    var isDisplayed = false;
-
-                    if (pageChangeData.paginationInfo && pageChangeData.paginationInfo.openPages.length)
-                    {
-                        var allSame = true;
-                        
-                        for (var i = 0; i < pageChangeData.paginationInfo.openPages.length; i++)
-                        {
-                            if (pageChangeData.paginationInfo.openPages[i].idref === prop)
-                            {
-                                isDisplayed = true;
-                            }
-                            else
-                            {
-                                allSame = false;
-                            }
-                        }
-                        
-                        if (!isActive && allSame) isActive = true;
-                    }
-                    
-                    if (isActive || isDisplayed)
-                    {
-                        var data = _spineItemIframeMap[prop];
-                        if (!data) continue;
-                    
-                        _spineItemIframeMap[prop]["active"] = isActive;
-                    
-                        var $iframe = data["$iframe"];
-                        var href = data.href;
-
-                        var $audios = $("audio", $iframe[0].contentDocument);
-                        $.each($audios, function() {
-
-                            var attr = this.getAttribute("epub:type") || this.getAttribute("type");
-
-                            if (!attr) return true; // continue
-
-                            if (attr.indexOf("ibooks:soundtrack") < 0 && attr.indexOf("media:soundtrack") < 0 && attr.indexOf("media:background") < 0) return true; // continue
-
-                            this.setAttribute("loop", "loop");
-                            this.removeAttribute("autoplay");
-
-                            // DEBUG!
-                            //this.setAttribute("controls", "controls");
-
-                            if (isActive)
-                            {
-                                // DEBUG!
-                                //$(this).css({border:"2px solid green"});
-                            }
-                            else
-                            {
-                                if (this.pause) this.pause();
-                                
-                                // DEBUG!
-                                //$(this).css({border:"2px solid red"});
-                            }
-        
-                            atLeastOne = true;
-
-                            return true; // continue (more than one track?)
-                        });
-                        
-                        continue;
-                    }
-                    else
-                    {
-                        if (_spineItemIframeMap[prop]) _spineItemIframeMap[prop]["$iframe"] = undefined;
-                        _spineItemIframeMap[prop] = undefined;
-                    }
-                }
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-
-            if (_callback_isAvailable)
-            {
-                _callback_isAvailable(atLeastOne);
-            }
-
-            if (atLeastOne)
-            {
-                if (_wasPlaying)
-                {
-                    _playPause(true);
-                }
-                else
-                {
-                    _playPause(false); // ensure correct paused state
-                }
-            }
-            else
-            {
-                _playPause(false); // ensure correct paused state
-            }
-        });
-        
-        self.on(Events.MEDIA_OVERLAY_STATUS_CHANGED, function (value)
-        {
-            if (!value.smilIndex) return;
-            var package = self.package();
-            var smil = package.media_overlay.smilAt(value.smilIndex);
-            if (!smil || !smil.spineItemId) return;
-
-            var needUpdate = false;
-            for (var prop in _spineItemIframeMap)
-            {
-                if (!_spineItemIframeMap.hasOwnProperty(prop)) continue;
-                
-                var data = _spineItemIframeMap[prop];
-                if (!data) continue;
-                
-                if (data.active)
-                {
-                    if (prop !== smil.spineItemId)
-                    {
-                        _playPause(false); // ensure correct paused state
-                        data.active = false;
-                        needUpdate = true;
-                    }
-                }
-            }
-
-            if (needUpdate)
-            {
-                for (var prop in _spineItemIframeMap)
-                {
-                    if (!_spineItemIframeMap.hasOwnProperty(prop)) continue;
-                
-                    var data = _spineItemIframeMap[prop];
-                    if (!data) continue;
-                
-                    if (!data.active)
-                    {
-                        if (prop === smil.spineItemId)
-                        {
-                            data.active = true;
-                        }
-                    }
-                }
-            
-                if (_wasPlaying)
-                {
-                    _playPause(true);
-                }
-            }
-        });
-    };
-    this.backgroundAudioTrackManager = new BackgroundAudioTrackManager();
+        if (_wasPlaying) {
+          _playPause(true);
+        }
+      }
+    });
+  };
+  this.backgroundAudioTrackManager = new BackgroundAudioTrackManager();
 };
 
 module.exports = ReaderView;

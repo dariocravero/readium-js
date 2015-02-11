@@ -1,35 +1,32 @@
 function SmilNode(parent) {
 
-    this.parent = parent;
-    
-    this.id = "";
-    
-    //root node is a smil model
-    this.getSmil = function() {
+  this.parent = parent;
 
-        var node = this;
-        while(node.parent) {
-            node = node.parent;
-        }
+  this.id = "";
 
-        return node;
-    };
-    
-    this.hasAncestor = function(node)
-    {
-        var parent = this.parent;
-        while(parent)
-        {
-            if (parent == node)
-            {
-                return true;
-            }
+  //root node is a smil model
+  this.getSmil = function() {
 
-            parent = parent.parent;
-        }
+    var node = this;
+    while (node.parent) {
+      node = node.parent;
+    }
 
-        return false;
-    };
+    return node;
+  };
+
+  this.hasAncestor = function(node) {
+    var parent = this.parent;
+    while (parent) {
+      if (parent == node) {
+        return true;
+      }
+
+      parent = parent.parent;
+    }
+
+    return false;
+  };
 };
 
 module.exports = SmilNode

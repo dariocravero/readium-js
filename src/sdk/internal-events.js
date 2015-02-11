@@ -5,9 +5,9 @@
      * @namespace
      */
 
-module.exports = {
-    /**
-      * @event
-      */
-    CURRENT_VIEW_PAGINATION_CHANGED: "CurrentViewPaginationChanged",
-}
+    module.exports = {
+      /**
+       * @event
+       */
+      CURRENT_VIEW_PAGINATION_CHANGED: "CurrentViewPaginationChanged",
+    }

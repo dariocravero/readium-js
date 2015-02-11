@@ -35,184 +35,183 @@ var Constants = require('./spine-item-constants')
  * @param {Spine} spine
  *
  */
-var SpineItem = function(itemData, index, spine){
+var SpineItem = function(itemData, index, spine) {
 
-    var self = this;
+  var self = this;
 
-    this.idref = itemData.idref;
-    this.href = itemData.href;
+  this.idref = itemData.idref;
+  this.href = itemData.href;
 
-    this.linear = itemData.linear ? itemData.linear.toLowerCase() : itemData.linear;
+  this.linear = itemData.linear ? itemData.linear.toLowerCase() : itemData.linear;
 
-    this.page_spread = itemData.page_spread;
-    
-    this.rendition_viewport = itemData.rendition_viewport;
-    
-    this.rendition_spread = itemData.rendition_spread;
-    
-    //TODO: unused yet!
-    this.rendition_orientation = itemData.rendition_orientation;
+  this.page_spread = itemData.page_spread;
 
-    this.rendition_layout = itemData.rendition_layout;
-    
-    this.rendition_flow = itemData.rendition_flow;
-    
-    
-    
-    this.media_overlay_id = itemData.media_overlay_id;
+  this.rendition_viewport = itemData.rendition_viewport;
 
-    this.media_type = itemData.media_type;
+  this.rendition_spread = itemData.rendition_spread;
 
-    this.index = index;
-    this.spine = spine;
+  //TODO: unused yet!
+  this.rendition_orientation = itemData.rendition_orientation;
+
+  this.rendition_layout = itemData.rendition_layout;
+
+  this.rendition_flow = itemData.rendition_flow;
+
+
+
+  this.media_overlay_id = itemData.media_overlay_id;
+
+  this.media_type = itemData.media_type;
+
+  this.index = index;
+  this.spine = spine;
+
+  validateSpread();
+
+  this.setSpread = function(spread) {
+    this.page_spread = spread;
 
     validateSpread();
+  };
 
-    this.setSpread = function(spread) {
-        this.page_spread = spread;
+  this.isRenditionSpreadAllowed = function() {
 
-        validateSpread();
-    };
+    var rendition_spread = self.getRenditionSpread();
+    return !rendition_spread || rendition_spread != Constants.RENDITION_SPREAD_NONE;
+  };
 
-    this.isRenditionSpreadAllowed = function() {
-        
-        var rendition_spread = self.getRenditionSpread();
-        return !rendition_spread || rendition_spread != Constants.RENDITION_SPREAD_NONE;
-    };
+  function validateSpread() {
 
-    function validateSpread() {
-
-        if(!self.page_spread) {
-            return;
-        }
-
-        if( self.page_spread != Constants.SPREAD_LEFT &&
-            self.page_spread != Constants.SPREAD_RIGHT &&
-            self.page_spread != Constants.SPREAD_CENTER ) {
-
-            console.error(self.page_spread + " is not a recognized spread type");
-        }
-
+    if (!self.page_spread) {
+      return;
     }
 
-    this.isLeftPage = function() {
-        return self.page_spread == Constants.SPREAD_LEFT;
-    };
+    if (self.page_spread != Constants.SPREAD_LEFT &&
+      self.page_spread != Constants.SPREAD_RIGHT &&
+      self.page_spread != Constants.SPREAD_CENTER) {
 
-    this.isRightPage = function() {
-        return self.page_spread == Constants.SPREAD_RIGHT;
-    };
-
-    this.isCenterPage = function() {
-        return self.page_spread == Constants.SPREAD_CENTER;
-    };
-
-    this.isReflowable = function() {
-        return !self.isFixedLayout();
-    };
-
-    this.isFixedLayout = function() {
-        
-        // cannot use isPropertyValueSetForItemOrPackage() here!
-
-        var isLayoutExplicitlyDefined = self.getRenditionLayout();
-
-        if(isLayoutExplicitlyDefined) {
-
-            if (self.rendition_layout)
-            {
-                if (self.rendition_layout === Constants.RENDITION_LAYOUT_PREPAGINATED) return true;
-                if (self.rendition_layout === Constants.RENDITION_LAYOUT_REFLOWABLE) return false;
-            }
-
-            return self.spine.package.isFixedLayout();
-        }
-
-        // if image or svg use fixed layout
-        return self.media_type.indexOf("image/") >= 0;
-
-    };
-
-    this.getRenditionFlow = function() {
-
-        if(self.rendition_flow) {
-            return self.rendition_flow;
-        }
-
-        return self.spine.package.rendition_flow;
-    };
-    
-    this.getRenditionViewport = function() {
-
-        if(self.rendition_viewport) {
-            return self.rendition_viewport;
-        }
-
-        return self.spine.package.rendition_viewport;
-    };
-
-    this.getRenditionSpread = function() {
-
-        if(self.rendition_spread) {
-            return self.rendition_spread;
-        }
-
-        return self.spine.package.rendition_spread;
-    };
-
-    this.getRenditionOrientation = function() {
-
-        if(self.rendition_orientation) {
-            return self.rendition_orientation;
-        }
-
-        return self.spine.package.rendition_orientation;
-    };
-
-    this.getRenditionLayout = function() {
-
-        if(self.rendition_layout) {
-            return self.rendition_layout;
-        }
-
-        return self.spine.package.rendition_layout;
-    };
-
-    function isPropertyValueSetForItemOrPackage(propName, propValue) {
-
-        if(self[propName]) {
-            return self[propName] === propValue;
-        }
-
-        if(self.spine.package[propName]) {
-            return self.spine.package[propName] === propValue;
-        }
-
-        return false;
+      console.error(self.page_spread + " is not a recognized spread type");
     }
 
-    this.isFlowScrolledContinuous = function() {
+  }
 
-        return isPropertyValueSetForItemOrPackage("rendition_flow", Constants.RENDITION_FLOW_SCROLLED_CONTINUOUS);
-    };
+  this.isLeftPage = function() {
+    return self.page_spread == Constants.SPREAD_LEFT;
+  };
 
-    this.isFlowScrolledDoc = function() {
+  this.isRightPage = function() {
+    return self.page_spread == Constants.SPREAD_RIGHT;
+  };
 
-        return isPropertyValueSetForItemOrPackage("rendition_flow", Constants.RENDITION_FLOW_SCROLLED_DOC);
-    };
+  this.isCenterPage = function() {
+    return self.page_spread == Constants.SPREAD_CENTER;
+  };
+
+  this.isReflowable = function() {
+    return !self.isFixedLayout();
+  };
+
+  this.isFixedLayout = function() {
+
+    // cannot use isPropertyValueSetForItemOrPackage() here!
+
+    var isLayoutExplicitlyDefined = self.getRenditionLayout();
+
+    if (isLayoutExplicitlyDefined) {
+
+      if (self.rendition_layout) {
+        if (self.rendition_layout === Constants.RENDITION_LAYOUT_PREPAGINATED) return true;
+        if (self.rendition_layout === Constants.RENDITION_LAYOUT_REFLOWABLE) return false;
+      }
+
+      return self.spine.package.isFixedLayout();
+    }
+
+    // if image or svg use fixed layout
+    return self.media_type.indexOf("image/") >= 0;
+
+  };
+
+  this.getRenditionFlow = function() {
+
+    if (self.rendition_flow) {
+      return self.rendition_flow;
+    }
+
+    return self.spine.package.rendition_flow;
+  };
+
+  this.getRenditionViewport = function() {
+
+    if (self.rendition_viewport) {
+      return self.rendition_viewport;
+    }
+
+    return self.spine.package.rendition_viewport;
+  };
+
+  this.getRenditionSpread = function() {
+
+    if (self.rendition_spread) {
+      return self.rendition_spread;
+    }
+
+    return self.spine.package.rendition_spread;
+  };
+
+  this.getRenditionOrientation = function() {
+
+    if (self.rendition_orientation) {
+      return self.rendition_orientation;
+    }
+
+    return self.spine.package.rendition_orientation;
+  };
+
+  this.getRenditionLayout = function() {
+
+    if (self.rendition_layout) {
+      return self.rendition_layout;
+    }
+
+    return self.spine.package.rendition_layout;
+  };
+
+  function isPropertyValueSetForItemOrPackage(propName, propValue) {
+
+    if (self[propName]) {
+      return self[propName] === propValue;
+    }
+
+    if (self.spine.package[propName]) {
+      return self.spine.package[propName] === propValue;
+    }
+
+    return false;
+  }
+
+  this.isFlowScrolledContinuous = function() {
+
+    return isPropertyValueSetForItemOrPackage("rendition_flow", Constants.RENDITION_FLOW_SCROLLED_CONTINUOUS);
+  };
+
+  this.isFlowScrolledDoc = function() {
+
+    return isPropertyValueSetForItemOrPackage("rendition_flow", Constants.RENDITION_FLOW_SCROLLED_DOC);
+  };
 };
 
 SpineItem.alternateSpread = function(spread) {
 
-    if(spread === Constants.SPREAD_LEFT) {
-        return Constants.SPREAD_RIGHT;
-    }
+  if (spread === Constants.SPREAD_LEFT) {
+    return Constants.SPREAD_RIGHT;
+  }
 
-    if(spread === Constants.SPREAD_RIGHT) {
-        return Constants.SPREAD_LEFT;
-    }
+  if (spread === Constants.SPREAD_RIGHT) {
+    return Constants.SPREAD_LEFT;
+  }
 
-    return spread;
+  return spread;
 
 };
 

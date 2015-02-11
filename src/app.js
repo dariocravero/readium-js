@@ -1,10 +1,10 @@
 var Readium = require('./index')
 
 var reader = new Readium.Reader({
-    useSimpleLoader: true
-  }, {
-    el: '#readium-container'
-  })
+  useSimpleLoader: true
+}, {
+  el: '#readium-container'
+})
 
 //  https://github.com/readium/readium-js-viewer/blob/master/lib/EpubReader.js#L643-L792
 //  Readium.Reader.readiumOptions {

@@ -11,7 +11,7 @@
 //  used to endorse or promote products derived from this software without specific 
 //  prior written permission.
 
-function MarkupParser(){
+function MarkupParser() {
 
   var self = this;
 

@@ -36,157 +36,146 @@ var escapeJQuerySelector = require('../helpers/escape-jquery-selector')
 
 function SmilIterator(smil) {
 
-    this.smil = smil;
-    this.currentPar = undefined;
+  this.smil = smil;
+  this.currentPar = undefined;
 
-    this.reset = function() {
-        this.currentPar = findParNode(0, this.smil, false);
-    };
+  this.reset = function() {
+    this.currentPar = findParNode(0, this.smil, false);
+  };
 
-    /*
-    this.firstDeep = function(container) {
-        var par = container.nodeType === "par" ? container : findParNode(0, container, false);
+  /*
+  this.firstDeep = function(container) {
+      var par = container.nodeType === "par" ? container : findParNode(0, container, false);
 
-        return par;
-    };
-    */
-//
-//    this.ensureNextValidTextElement = function()
-//    {
-//        if (!this.currentPar)
-//        {
-//            console.debug("Par iterator is out of range");
-//            return;
-//        }
-//
-//        while (this.currentPar && !this.currentPar.element)
-//        {
-//            this.next();
-//        }
-//    };
+      return par;
+  };
+  */
+  //
+  //    this.ensureNextValidTextElement = function()
+  //    {
+  //        if (!this.currentPar)
+  //        {
+  //            console.debug("Par iterator is out of range");
+  //            return;
+  //        }
+  //
+  //        while (this.currentPar && !this.currentPar.element)
+  //        {
+  //            this.next();
+  //        }
+  //    };
 
-    this.findTextId = function(id)
-    {
-        if (!this.currentPar)
-        {
-            console.debug("Par iterator is out of range");
-            return;
-        }
-
-        if (!id)
-        {
-            return false;
-        }
-
-        while (this.currentPar)
-        {
-            if (this.currentPar.element)
-            {
-                if (id === this.currentPar.text.srcFragmentId) //this.currentPar.element.id
-                {
-                    return true;
-                }
-
-                // OUTER match
-                var parent = this.currentPar.element.parentNode;
-                while(parent)
-                {
-                    if (parent.id && parent.id == id)
-                    {
-                        return true;
-                    }
-
-                    parent = parent.parentNode;
-                }
-
-                // INNER match
-                //var inside = this.currentPar.element.ownerDocument.getElementById(id);
-                var inside = $("#" + escapeJQuerySelector(id), this.currentPar.element);
-                if (inside && inside.length && inside[0])
-                {
-                    return true;
-                }
-            }
-
-            this.next();
-        }
-
-        return false;
+  this.findTextId = function(id) {
+    if (!this.currentPar) {
+      console.debug("Par iterator is out of range");
+      return;
     }
 
-    this.next = function() {
+    if (!id) {
+      return false;
+    }
 
-        if(!this.currentPar) {
-            console.debug("Par iterator is out of range");
-            return;
-        }
-
-        this.currentPar = findParNode(this.currentPar.index + 1, this.currentPar.parent, false);
-    };
-
-    this.previous = function() {
-
-        if(!this.currentPar) {
-            console.debug("Par iterator is out of range");
-            return;
-        }
-
-        this.currentPar = findParNode(this.currentPar.index - 1, this.currentPar.parent, true);
-    };
-
-    this.isLast = function() {
-
-        if(!this.currentPar) {
-            console.debug("Par iterator is out of range");
-            return;
-        }
-
-        if (findParNode(this.currentPar.index + 1, this.currentPar.parent, false))
+    while (this.currentPar) {
+      if (this.currentPar.element) {
+        if (id === this.currentPar.text.srcFragmentId) //this.currentPar.element.id
         {
-            return false;
+          return true;
         }
 
-        return true;
+        // OUTER match
+        var parent = this.currentPar.element.parentNode;
+        while (parent) {
+          if (parent.id && parent.id == id) {
+            return true;
+          }
+
+          parent = parent.parentNode;
+        }
+
+        // INNER match
+        //var inside = this.currentPar.element.ownerDocument.getElementById(id);
+        var inside = $("#" + escapeJQuerySelector(id), this.currentPar.element);
+        if (inside && inside.length && inside[0]) {
+          return true;
+        }
+      }
+
+      this.next();
     }
 
-    this.goToPar =  function(par) {
+    return false;
+  }
 
-        while(this.currentPar) {
-            if(this.currentPar == par) {
-                break;
-            }
+  this.next = function() {
 
-            this.next();
-        }
-    };
-
-    function findParNode(startIndex, container, previous) {
-
-        for(var i = startIndex, count = container.children.length;
-            i >= 0 && i < count;
-            i += (previous ? -1 : 1)) {
-
-            var node = container.children[i];
-            if(node.nodeType == "par") {
-                return node;
-            }
-
-            // assert(node.nodeType == "seq")
-            node = findParNode(previous ? node.children.length - 1 : 0, node, previous);
-
-            if(node) {
-                return node;
-            }
-        }
-
-        if(container.parent) {
-            return findParNode(container.index + (previous ? -1 : 1), container.parent, previous);
-        }
-
-        return undefined;
+    if (!this.currentPar) {
+      console.debug("Par iterator is out of range");
+      return;
     }
 
-    this.reset();
+    this.currentPar = findParNode(this.currentPar.index + 1, this.currentPar.parent, false);
+  };
+
+  this.previous = function() {
+
+    if (!this.currentPar) {
+      console.debug("Par iterator is out of range");
+      return;
+    }
+
+    this.currentPar = findParNode(this.currentPar.index - 1, this.currentPar.parent, true);
+  };
+
+  this.isLast = function() {
+
+    if (!this.currentPar) {
+      console.debug("Par iterator is out of range");
+      return;
+    }
+
+    if (findParNode(this.currentPar.index + 1, this.currentPar.parent, false)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  this.goToPar = function(par) {
+
+    while (this.currentPar) {
+      if (this.currentPar == par) {
+        break;
+      }
+
+      this.next();
+    }
+  };
+
+  function findParNode(startIndex, container, previous) {
+
+    for (var i = startIndex, count = container.children.length; i >= 0 && i < count; i += (previous ? -1 : 1)) {
+
+      var node = container.children[i];
+      if (node.nodeType == "par") {
+        return node;
+      }
+
+      // assert(node.nodeType == "seq")
+      node = findParNode(previous ? node.children.length - 1 : 0, node, previous);
+
+      if (node) {
+        return node;
+      }
+    }
+
+    if (container.parent) {
+      return findParNode(container.index + (previous ? -1 : 1), container.parent, previous);
+    }
+
+    return undefined;
+  }
+
+  this.reset();
 };
 
 module.exports = SmilIterator

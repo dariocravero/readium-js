@@ -39,171 +39,162 @@ var POSITION_CENTER = "center";
 
 var Spread = function(spine, isSyntheticSpread) {
 
-    var self = this;
+  var self = this;
 
-    this.spine = spine;
+  this.spine = spine;
 
-    this.leftItem = undefined;
-    this.rightItem = undefined;
-    this.centerItem = undefined;
+  this.leftItem = undefined;
+  this.rightItem = undefined;
+  this.centerItem = undefined;
 
-    var _isSyntheticSpread = isSyntheticSpread;
+  var _isSyntheticSpread = isSyntheticSpread;
 
-    this.setSyntheticSpread = function(isSyntheticSpread) {
-        _isSyntheticSpread = isSyntheticSpread;
-    };
+  this.setSyntheticSpread = function(isSyntheticSpread) {
+    _isSyntheticSpread = isSyntheticSpread;
+  };
 
-    this.isSyntheticSpread = function() {
-        return _isSyntheticSpread;
-    };
+  this.isSyntheticSpread = function() {
+    return _isSyntheticSpread;
+  };
 
-    this.openFirst = function() {
+  this.openFirst = function() {
 
-        if( this.spine.items.length == 0 ) {
-            resetItems();
+    if (this.spine.items.length == 0) {
+      resetItems();
+    } else {
+      this.openItem(this.spine.first());
+    }
+  };
+
+  this.openLast = function() {
+
+    if (this.spine.items.length == 0) {
+      resetItems();
+    } else {
+      this.openItem(this.spine.last());
+    }
+  };
+
+  this.openItem = function(item) {
+
+    resetItems();
+
+    var position = getItemPosition(item);
+    setItemToPosition(item, position);
+
+    if (position != POSITION_CENTER && this.spine.isValidLinearItem(item.index)) { // && item.isRenditionSpreadAllowed() not necessary, see getItemPosition() below
+      var neighbour = getNeighbourItem(item);
+      if (neighbour) {
+        var neighbourPos = getItemPosition(neighbour);
+        if (neighbourPos != position && neighbourPos != POSITION_CENTER && !neighbour.isReflowable() && neighbour.isRenditionSpreadAllowed()) {
+          setItemToPosition(neighbour, neighbourPos);
         }
-        else {
-            this.openItem(this.spine.first());
-        }
-    };
+      }
+    }
+  };
 
-    this.openLast = function() {
+  function resetItems() {
 
-        if( this.spine.items.length == 0 ) {
-            resetItems();
-        }
-        else {
-            this.openItem(this.spine.last());
-        }
-    };
+    self.leftItem = undefined;
+    self.rightItem = undefined;
+    self.centerItem = undefined;
+  }
 
-    this.openItem = function(item) {
+  function setItemToPosition(item, position) {
 
-        resetItems();
+    if (position == POSITION_LEFT) {
+      self.leftItem = item;
+    } else if (position == POSITION_RIGHT) {
+      self.rightItem = item;
+    } else {
 
-        var position = getItemPosition(item);
-        setItemToPosition(item, position);
+      if (position != POSITION_CENTER) {
+        console.error("Unrecognized position value");
+      }
 
-        if(position != POSITION_CENTER && this.spine.isValidLinearItem(item.index)) { // && item.isRenditionSpreadAllowed() not necessary, see getItemPosition() below
-            var neighbour = getNeighbourItem(item);
-            if(neighbour) {
-                var neighbourPos = getItemPosition(neighbour);
-                if(neighbourPos != position
-                    && neighbourPos != POSITION_CENTER
-                    && !neighbour.isReflowable()
-                    && neighbour.isRenditionSpreadAllowed())  {
-                    setItemToPosition(neighbour, neighbourPos);
-                }
-            }
-        }
-    };
+      self.centerItem = item;
+    }
+  }
 
-    function resetItems() {
+  function getItemPosition(item) {
 
-        self.leftItem = undefined;
-        self.rightItem = undefined;
-        self.centerItem = undefined;
+    // includes !item.isRenditionSpreadAllowed() ("rendition:spread-none") ==> force center position
+    if (!_isSyntheticSpread) {
+      return POSITION_CENTER;
     }
 
-    function setItemToPosition(item, position) {
-
-        if(position == POSITION_LEFT) {
-            self.leftItem = item;
-        }
-        else if (position == POSITION_RIGHT) {
-            self.rightItem = item;
-        }
-        else {
-
-            if(position != POSITION_CENTER) {
-                console.error("Unrecognized position value");
-            }
-
-            self.centerItem = item;
-        }
+    if (item.isLeftPage()) {
+      return POSITION_LEFT;
     }
 
-    function getItemPosition(item) {
-        
-        // includes !item.isRenditionSpreadAllowed() ("rendition:spread-none") ==> force center position
-        if(!_isSyntheticSpread) {
-            return POSITION_CENTER;
-        }
-
-        if(item.isLeftPage()) {
-            return POSITION_LEFT;
-        }
-
-        if (item.isRightPage()) {
-            return POSITION_RIGHT;
-        }
-
-        return POSITION_CENTER;
+    if (item.isRightPage()) {
+      return POSITION_RIGHT;
     }
 
-    this.openNext = function() {
+    return POSITION_CENTER;
+  }
 
-        var items = this.validItems();
+  this.openNext = function() {
 
-        if(items.length == 0) {
+    var items = this.validItems();
 
-            this.openFirst();
-        }
-        else {
+    if (items.length == 0) {
 
-            var nextItem = this.spine.nextItem(items[items.length - 1]);
-            if(nextItem) {
+      this.openFirst();
+    } else {
 
-                this.openItem(nextItem);
-            }
-        }
-    };
+      var nextItem = this.spine.nextItem(items[items.length - 1]);
+      if (nextItem) {
 
-    this.openPrev = function() {
-
-        var items = this.validItems();
-
-        if(items.length == 0) {
-            this.openLast();
-        }
-        else {
-
-            var prevItem = this.spine.prevItem(items[0]);
-            if(prevItem) {
-
-                this.openItem(prevItem);
-
-            }
-        }
-    };
-
-    this.validItems = function() {
-
-        var arr = [];
-
-        if(this.leftItem) arr.push(this.leftItem);
-        if(this.rightItem) arr.push(this.rightItem);
-        if(this.centerItem) arr.push(this.centerItem);
-
-        arr.sort(function(a, b) {
-            return a.index - b.index;
-        });
-
-        return arr;
-    };
-
-    function getNeighbourItem(item) {
-
-        if(item.isLeftPage()) {
-            return self.spine.isRightToLeft() ? self.spine.prevItem(item) : self.spine.nextItem(item);
-        }
-
-        if(item.isRightPage()) {
-            return self.spine.isRightToLeft() ? self.spine.nextItem(item) : self.spine.prevItem(item);
-        }
-
-        return undefined;
+        this.openItem(nextItem);
+      }
     }
+  };
+
+  this.openPrev = function() {
+
+    var items = this.validItems();
+
+    if (items.length == 0) {
+      this.openLast();
+    } else {
+
+      var prevItem = this.spine.prevItem(items[0]);
+      if (prevItem) {
+
+        this.openItem(prevItem);
+
+      }
+    }
+  };
+
+  this.validItems = function() {
+
+    var arr = [];
+
+    if (this.leftItem) arr.push(this.leftItem);
+    if (this.rightItem) arr.push(this.rightItem);
+    if (this.centerItem) arr.push(this.centerItem);
+
+    arr.sort(function(a, b) {
+      return a.index - b.index;
+    });
+
+    return arr;
+  };
+
+  function getNeighbourItem(item) {
+
+    if (item.isLeftPage()) {
+      return self.spine.isRightToLeft() ? self.spine.prevItem(item) : self.spine.nextItem(item);
+    }
+
+    if (item.isRightPage()) {
+      return self.spine.isRightToLeft() ? self.spine.nextItem(item) : self.spine.prevItem(item);
+    }
+
+    return undefined;
+  }
 
 };
 

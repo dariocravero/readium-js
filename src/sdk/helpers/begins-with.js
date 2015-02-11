@@ -7,7 +7,7 @@
  */
 function BeginsWith(str, suffix) {
 
-    return str.indexOf(suffix) === 0;
+  return str.indexOf(suffix) === 0;
 };
 
 module.exports = BeginsWith

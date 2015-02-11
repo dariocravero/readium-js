@@ -3,11 +3,11 @@ var Backbone = require('backbone')
 // Rationale: The order of these matters
 var TextLineInferrer = Backbone.Model.extend({
 
-  initialize : function (attributes, options) {},
+  initialize: function(attributes, options) {},
 
   // ----------------- PUBLIC INTERFACE --------------------------------------------------------------
 
-  inferLines : function (rectList) {
+  inferLines: function(rectList) {
 
     var inferredLines = [];
     var numRects = rectList.length;
@@ -28,9 +28,9 @@ var TextLineInferrer = Backbone.Model.extend({
         if (this.includeRectInLine(currLine, currRect.top, currRect.left, currRect.width, currRect.height)) {
           this.expandLine(currLine, currRect.left, currRect.top, currRect.width, currRect.height);
           rectAppended = true;
-          break;   
+          break;
         }
-      } 
+      }
 
       if (rectAppended) {
         continue;
@@ -48,7 +48,7 @@ var TextLineInferrer = Backbone.Model.extend({
 
   // ----------------- PRIVATE HELPERS ---------------------------------------------------------------
 
-  includeRectInLine : function (currLine, rectTop, rectLeft, rectWidth, rectHeight) {
+  includeRectInLine: function(currLine, rectTop, rectLeft, rectWidth, rectHeight) {
 
     // is on an existing line : based on vertical position
     if (this.rectIsWithinLineVertically(rectTop, rectHeight, currLine.maxTop, currLine.maxBottom)) {
@@ -60,7 +60,7 @@ var TextLineInferrer = Backbone.Model.extend({
     return false;
   },
 
-  rectIsWithinLineVertically : function (rectTop, rectHeight, currLineMaxTop, currLineMaxBottom) {
+  rectIsWithinLineVertically: function(rectTop, rectHeight, currLineMaxTop, currLineMaxBottom) {
 
     var rectBottom = rectTop + rectHeight;
     var lineHeight = currLineMaxBottom - currLineMaxTop;
@@ -74,25 +74,20 @@ var TextLineInferrer = Backbone.Model.extend({
 
     if (rectTop === currLineMaxTop && rectBottom === currLineMaxBottom) {
       return true;
-    }
-    else if (rectTop < currLineMaxTop && rectBottom < currLineMaxBottom && rectBottom > currLineMaxTop) {
+    } else if (rectTop < currLineMaxTop && rectBottom < currLineMaxBottom && rectBottom > currLineMaxTop) {
       return true;
-    }
-    else if (rectTop > currLineMaxTop && rectBottom > currLineMaxBottom && rectTop < currLineMaxBottom) {
+    } else if (rectTop > currLineMaxTop && rectBottom > currLineMaxBottom && rectTop < currLineMaxBottom) {
       return true;
-    }
-    else if (rectTop > currLineMaxTop && rectBottom < currLineMaxBottom) {
+    } else if (rectTop > currLineMaxTop && rectBottom < currLineMaxBottom) {
       return true;
-    }
-    else if (rectTop < currLineMaxTop && rectBottom > currLineMaxBottom) {
+    } else if (rectTop < currLineMaxTop && rectBottom > currLineMaxBottom) {
       return true;
-    }
-    else {
+    } else {
       return false;
     }
   },
 
-  rectIsWithinLineHorizontally : function (rectLeft, rectWidth, currLineLeft, currLineWidth, currLineAvgHeight) {
+  rectIsWithinLineHorizontally: function(rectLeft, rectWidth, currLineLeft, currLineWidth, currLineAvgHeight) {
 
     var lineGapHeuristic = 2 * currLineAvgHeight;
     var rectRight = rectLeft + rectWidth;
@@ -100,33 +95,31 @@ var TextLineInferrer = Backbone.Model.extend({
 
     if ((currLineLeft - rectRight) > lineGapHeuristic) {
       return false;
-    }
-    else if ((rectLeft - currLineRight) > lineGapHeuristic) {
+    } else if ((rectLeft - currLineRight) > lineGapHeuristic) {
       return false;
-    }
-    else {
+    } else {
       return true;
     }
   },
 
-  createNewLine : function (rectLeft, rectTop, rectWidth, rectHeight) {
+  createNewLine: function(rectLeft, rectTop, rectWidth, rectHeight) {
 
     var maxBottom = rectTop + rectHeight;
 
     return {
-      left : rectLeft,
-      startTop : rectTop,
-      width : rectWidth, 
-      avgHeight : rectHeight, 
-      maxTop : rectTop,
-      maxBottom : maxBottom,
-      numRects : 1
+      left: rectLeft,
+      startTop: rectTop,
+      width: rectWidth,
+      avgHeight: rectHeight,
+      maxTop: rectTop,
+      maxBottom: maxBottom,
+      numRects: 1
     };
   },
 
-  expandLine : function (currLine, rectLeft, rectTop, rectWidth, rectHeight) {
+  expandLine: function(currLine, rectLeft, rectTop, rectWidth, rectHeight) {
 
-    var lineOldRight = currLine.left + currLine.width; 
+    var lineOldRight = currLine.left + currLine.width;
 
     // Update all the properties of the current line with rect dimensions
     var rectRight = rectLeft + rectWidth;
@@ -141,16 +134,16 @@ var TextLineInferrer = Backbone.Model.extend({
 
     // Expand the line vertically
     currLine = this.expandLineVertically(currLine, rectTop, rectBottom);
-    currLine = this.expandLineHorizontally(currLine, rectLeft, rectRight);        
+    currLine = this.expandLineHorizontally(currLine, rectLeft, rectRight);
 
     return currLine;
   },
 
-  expandLineVertically : function (currLine, rectTop, rectBottom) {
+  expandLineVertically: function(currLine, rectTop, rectBottom) {
 
     if (rectTop < currLine.maxTop) {
       currLine.maxTop = rectTop;
-    } 
+    }
     if (rectBottom > currLine.maxBottom) {
       currLine.maxBottom = rectBottom;
     }
@@ -158,7 +151,7 @@ var TextLineInferrer = Backbone.Model.extend({
     return currLine;
   },
 
-  expandLineHorizontally : function (currLine, rectLeft, rectRight) {
+  expandLineHorizontally: function(currLine, rectLeft, rectRight) {
 
     var newLineLeft = currLine.left <= rectLeft ? currLine.left : rectLeft;
     var lineRight = currLine.left + currLine.width;

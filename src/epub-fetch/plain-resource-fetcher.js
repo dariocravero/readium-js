@@ -16,7 +16,7 @@ var _ = require('underscore');
 var URI = require('URIjs');
 var ContentTypeDiscovery = require('./discover-content-type');
 
-function PlainResourceFetcher(parentFetcher, baseUrl){
+function PlainResourceFetcher(parentFetcher, baseUrl) {
 
   var self = this;
   var _packageDocumentAbsoluteUrl;
@@ -36,7 +36,7 @@ function PlainResourceFetcher(parentFetcher, baseUrl){
     xhr.responseType = 'arraybuffer';
     xhr.onerror = onerror;
 
-    xhr.onload = function (loadEvent) {
+    xhr.onload = function(loadEvent) {
       readCallback(xhr.response);
     };
 
@@ -48,7 +48,7 @@ function PlainResourceFetcher(parentFetcher, baseUrl){
 
   this.initialize = function(callback) {
 
-    parentFetcher.getXmlFileDom('META-INF/container.xml', function (containerXmlDom) {
+    parentFetcher.getXmlFileDom('META-INF/container.xml', function(containerXmlDom) {
       _packageDocumentRelativePath = parentFetcher.getRootFile(containerXmlDom);
       _packageDocumentAbsoluteUrl = self.resolveURI(_packageDocumentRelativePath);
 
@@ -62,7 +62,7 @@ function PlainResourceFetcher(parentFetcher, baseUrl){
     });
   };
 
-  this.resolveURI = function (pathRelativeToPackageRoot) {
+  this.resolveURI = function(pathRelativeToPackageRoot) {
     return baseUrl + "/" + pathRelativeToPackageRoot;
   };
 
@@ -87,10 +87,10 @@ function PlainResourceFetcher(parentFetcher, baseUrl){
       url: fileUrl,
       dataType: 'text', //https://api.jquery.com/jQuery.ajax/
       async: true,
-      success: function (result) {
+      success: function(result) {
         fetchCallback(result);
       },
-      error: function (xhr, status, errorThrown) {
+      error: function(xhr, status, errorThrown) {
         console.error('Error when AJAX fetching ' + fileUrl);
         console.error(status);
         console.error(errorThrown);
@@ -118,13 +118,13 @@ function PlainResourceFetcher(parentFetcher, baseUrl){
     var decryptionFunction = parentFetcher.getDecryptionFunctionForRelativePath(pathRelativeToPackageRoot);
     if (decryptionFunction) {
       var origFetchCallback = fetchCallback;
-      fetchCallback = function (unencryptedBlob) {
-        decryptionFunction(unencryptedBlob, function (decryptedBlob) {
+      fetchCallback = function(unencryptedBlob) {
+        decryptionFunction(unencryptedBlob, function(decryptedBlob) {
           origFetchCallback(decryptedBlob);
         });
       };
     }
-    fetchFileContents(pathRelativeToPackageRoot, function (contentsArrayBuffer) {
+    fetchFileContents(pathRelativeToPackageRoot, function(contentsArrayBuffer) {
       var blob = new Blob([contentsArrayBuffer], {
         type: ContentTypeDiscovery.identifyContentTypeFromFileName(pathRelativeToPackageRoot)
       });
@@ -132,8 +132,8 @@ function PlainResourceFetcher(parentFetcher, baseUrl){
     }, onerror);
   };
 
-  this.getPackageDom = function (callback, onerror) {
-    self.fetchFileContentsText(_packageDocumentRelativePath, function (packageXml) {
+  this.getPackageDom = function(callback, onerror) {
+    self.fetchFileContentsText(_packageDocumentRelativePath, function(packageXml) {
       var packageDom = parentFetcher.markupParser.parseXml(packageXml);
       callback(packageDom);
     }, onerror);

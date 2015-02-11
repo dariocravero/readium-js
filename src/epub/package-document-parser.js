@@ -41,7 +41,7 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
     }
   }
 
-  publicationFetcher.getPackageDom(function(packageDom){
+  publicationFetcher.getPackageDom(function(packageDom) {
     _xmlDom = packageDom;
     _deferredXmlDom.resolve(packageDom);
   }, onError);
@@ -61,7 +61,7 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
   // Parse an XML package document into a javascript object
   this.parse = function(callback) {
 
-    _deferredXmlDom.done(function (xmlDom) {
+    _deferredXmlDom.done(function(xmlDom) {
       var metadata = getMetadata(xmlDom);
 
       var spineElem = xmlDom.getElementsByTagNameNS("*", "spine")[0];
@@ -81,12 +81,12 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
 
       $.when(updateMetadataWithIBookProperties(metadata)).then(function() {
 
-        _packageFetcher.setPackageMetadata(metadata, function () {
+        _packageFetcher.setPackageMetadata(metadata, function() {
           var packageDocument = new PackageDocument(publicationFetcher.getPackageUrl(),
-                                                    publicationFetcher, metadata, spine, manifest);
+            publicationFetcher, metadata, spine, manifest);
 
-                                                    packageDocument.setPageProgressionDirection(page_prog_dir);
-                                                    fillSmilData(packageDocument, callback);
+          packageDocument.setPageProgressionDirection(page_prog_dir);
+          fillSmilData(packageDocument, callback);
         });
       });
 
@@ -98,37 +98,35 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
     var dff = $.Deferred();
 
     //if layout not set
-    if(!metadata.rendition_layout)
-      {
-        var pathToIBooksSpecificXml = "/META-INF/com.apple.ibooks.display-options.xml";
+    if (!metadata.rendition_layout) {
+      var pathToIBooksSpecificXml = "/META-INF/com.apple.ibooks.display-options.xml";
 
-        publicationFetcher.relativeToPackageFetchFileContents(pathToIBooksSpecificXml, 'text', function (ibookPropText) {
-          if(ibookPropText) {
-            var parser = new MarkupParser();
-            var propModel = parser.parseXml(ibookPropText);
-            var fixLayoutProp = $("option[name=fixed-layout]", propModel)[0];
-            if(fixLayoutProp) {
-              var fixLayoutVal = $(fixLayoutProp).text();
-              if(fixLayoutVal === "true") {
-                metadata.rendition_layout = "pre-paginated";
-                console.log("using com.apple.ibooks.display-options.xml fixed-layout property");
-              }
+      publicationFetcher.relativeToPackageFetchFileContents(pathToIBooksSpecificXml, 'text', function(ibookPropText) {
+        if (ibookPropText) {
+          var parser = new MarkupParser();
+          var propModel = parser.parseXml(ibookPropText);
+          var fixLayoutProp = $("option[name=fixed-layout]", propModel)[0];
+          if (fixLayoutProp) {
+            var fixLayoutVal = $(fixLayoutProp).text();
+            if (fixLayoutVal === "true") {
+              metadata.rendition_layout = "pre-paginated";
+              console.log("using com.apple.ibooks.display-options.xml fixed-layout property");
             }
           }
+        }
 
-          dff.resolve();
-
-        }, function (err) {
-
-          console.log("com.apple.ibooks.display-options.xml not found");
-          dff.resolve();
-        });
-      }
-      else {
         dff.resolve();
-      }
 
-      return dff.promise();
+      }, function(err) {
+
+        console.log("com.apple.ibooks.display-options.xml not found");
+        dff.resolve();
+      });
+    } else {
+      dff.resolve();
+    }
+
+    return dff.promise();
   }
 
 
@@ -137,8 +135,8 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
     var $spineElements;
     var jsonSpine = [];
 
-    $spineElements = $(findXmlElemByLocalNameAnyNS(xmlDom,"spine")).children();
-    $.each($spineElements, function (spineElementIndex, currSpineElement) {
+    $spineElements = $(findXmlElemByLocalNameAnyNS(xmlDom, "spine")).children();
+    $.each($spineElements, function(spineElementIndex, currSpineElement) {
 
       var $currSpineElement = $(currSpineElement);
       var idref = $currSpineElement.attr("idref") ? $currSpineElement.attr("idref") : "";
@@ -207,7 +205,7 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
 
   function getMetaElemPropertyText(rootElement, attrPropertyValue) {
 
-    var foundElement = findXmlElemByLocalNameAnyNS(rootElement, "meta", function (element) {
+    var foundElement = findXmlElemByLocalNameAnyNS(rootElement, "meta", function(element) {
       return element.getAttribute("property") === attrPropertyValue;
     });
 
@@ -231,7 +229,7 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
     metadata.description = getElemText(metadataElem, "description");
     metadata.epub_version =
       packageElem.getAttribute("version") ? packageElem.getAttribute("version") : "";
-    metadata.id = getElemText(metadataElem,"identifier");
+    metadata.id = getElemText(metadataElem, "identifier");
     metadata.language = getElemText(metadataElem, "language");
     metadata.modified_date = getMetaElemPropertyText(metadataElem, "dcterms:modified");
     metadata.ncx = spineElem.getAttribute("toc") ? spineElem.getAttribute("toc") : "";
@@ -253,12 +251,12 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
     //http://www.idpf.org/epub/301/spec/epub-publications.html#fxl-property-viewport
 
     //metadata.rendition_viewport = getMetaElemPropertyText(metadataElem, "rendition:viewport");
-    metadata.rendition_viewport = getElemText(metadataElem, "meta", function (element) {
+    metadata.rendition_viewport = getElemText(metadataElem, "meta", function(element) {
       return element.getAttribute("property") === "rendition:viewport" && !element.hasAttribute("refines")
     });
 
     var viewports = [];
-    var viewportMetaElems = filterXmlElemsByLocalNameAnyNS(metadataElem, "meta", function (element) {
+    var viewportMetaElems = filterXmlElemsByLocalNameAnyNS(metadataElem, "meta", function(element) {
       return element.getAttribute("property") === "rendition:viewport" && element.hasAttribute("refines");
     });
     _.each(viewportMetaElems, function(currItem) {
@@ -266,8 +264,8 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
       if (id) {
         var hash = id.indexOf('#');
         if (hash >= 0) {
-          var start = hash+1;
-          var end = id.length-1;
+          var start = hash + 1;
+          var end = id.length - 1;
           id = id.substr(start, end);
         }
         id = id.trim();
@@ -290,7 +288,7 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
     // Media part
     metadata.mediaItems = [];
 
-    var overlayElems = filterXmlElemsByLocalNameAnyNS(metadataElem, "meta", function (element) {
+    var overlayElems = filterXmlElemsByLocalNameAnyNS(metadataElem, "meta", function(element) {
       return element.getAttribute("property") === "media:duration" && element.hasAttribute("refines");
     });
 
@@ -303,23 +301,25 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
 
     metadata.media_overlay = {
       duration: SmilDocumentParser.resolveClockValue(
-        getElemText(metadataElem, "meta", function (element) {
-        return element.getAttribute("property") === "media:duration" && !element.hasAttribute("refines")
-      })
+        getElemText(metadataElem, "meta", function(element) {
+          return element.getAttribute("property") === "media:duration" && !element.hasAttribute("refines")
+        })
       ),
       narrator: getMetaElemPropertyText(metadataElem, "media:narrator"),
       activeClass: getMetaElemPropertyText(metadataElem, "media:active-class"),
       playbackActiveClass: getMetaElemPropertyText(metadataElem, "media:playback-active-class"),
       smil_models: [],
       skippables: ["sidebar", "practice", "marginalia", "annotation", "help", "note", "footnote", "rearnote",
-        "table", "table-row", "table-cell", "list", "list-item", "pagebreak"],
-        escapables: ["sidebar", "bibliography", "toc", "loi", "appendix", "landmarks", "lot", "index",
-          "colophon", "epigraph", "conclusion", "afterword", "warning", "epilogue", "foreword",
-          "introduction", "prologue", "preface", "preamble", "notice", "errata", "copyright-page",
-          "acknowledgments", "other-credits", "titlepage", "imprimatur", "contributors", "halftitlepage",
-          "dedication", "help", "annotation", "marginalia", "practice", "note", "footnote", "rearnote",
-          "footnotes", "rearnotes", "bridgehead", "page-list", "table", "table-row", "table-cell", "list",
-          "list-item", "glossary"]
+        "table", "table-row", "table-cell", "list", "list-item", "pagebreak"
+      ],
+      escapables: ["sidebar", "bibliography", "toc", "loi", "appendix", "landmarks", "lot", "index",
+        "colophon", "epigraph", "conclusion", "afterword", "warning", "epilogue", "foreword",
+        "introduction", "prologue", "preface", "preamble", "notice", "errata", "copyright-page",
+        "acknowledgments", "other-credits", "titlepage", "imprimatur", "contributors", "halftitlepage",
+        "dedication", "help", "annotation", "marginalia", "practice", "note", "footnote", "rearnote",
+        "footnotes", "rearnotes", "bridgehead", "page-list", "table", "table-row", "table-cell", "list",
+        "list-item", "glossary"
+      ]
     };
 
     return metadata;
@@ -330,7 +330,7 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
     var $manifestItems = $(findXmlElemByLocalNameAnyNS(xmlDom, "manifest")).children();
     var jsonManifest = [];
 
-    $.each($manifestItems, function (manifestElementIndex, currManifestElement) {
+    $.each($manifestItems, function(manifestElementIndex, currManifestElement) {
 
       var $currManifestElement = $(currManifestElement);
       var currManifestElementHref = $currManifestElement.attr("href") ? $currManifestElement.attr("href") :
@@ -359,7 +359,7 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
     var $bindings = $(findXmlElemByLocalNameAnyNS(xmlDom, "bindings")).children();
     var jsonBindings = [];
 
-    $.each($bindings, function (bindingElementIndex, currBindingElement) {
+    $.each($bindings, function(bindingElementIndex, currBindingElement) {
 
       var $currBindingElement = $(currBindingElement);
       var binding = {
@@ -382,7 +382,7 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
 
     // epub3 spec for a cover image is like this:
     /*<item properties="cover-image" id="ci" href="cover.svg" media-type="image/svg+xml" />*/
-    $imageNode = $(findXmlElemByLocalNameAnyNS(manifest, "item", function (element) {
+    $imageNode = $(findXmlElemByLocalNameAnyNS(manifest, "item", function(element) {
       var attr = element.getAttribute("properties");
       return attr && _.contains(attr.split(" "), "cover-image");
     }));
@@ -392,12 +392,12 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
 
     // some epub2's cover image is like this:
     /*<meta name="cover" content="cover-image-item-id" />*/
-    var metaNode = $(findXmlElemByLocalNameAnyNS(xmlDom, "meta", function (element) {
+    var metaNode = $(findXmlElemByLocalNameAnyNS(xmlDom, "meta", function(element) {
       return element.getAttribute("name") === "cover";
     }));
     var contentAttr = metaNode.attr("content");
     if (metaNode.length === 1 && contentAttr) {
-      $imageNode = $(findXmlElemByLocalNameAnyNS(manifest, "item", function (element) {
+      $imageNode = $(findXmlElemByLocalNameAnyNS(manifest, "item", function(element) {
         return element.getAttribute("id") === contentAttr;
       }));
       if ($imageNode.length === 1 && $imageNode.attr("href")) {
@@ -406,7 +406,7 @@ function PackageDocumentParser(bookRoot, publicationFetcher) {
     }
 
     // that didn't seem to work so, it think epub2 just uses item with id=cover
-    $imageNode = $(findXmlElemByLocalNameAnyNS(manifest, "item", function (element) {
+    $imageNode = $(findXmlElemByLocalNameAnyNS(manifest, "item", function(element) {
       return element.getAttribute("id") === "cover";
     }));
     if ($imageNode.length === 1 && $imageNode.attr("href")) {

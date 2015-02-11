@@ -1,11 +1,11 @@
-var Backbone  = require('backbone')
+var Backbone = require('backbone')
 
 var Underline = Backbone.Model.extend({
-    defaults : {
-        "isVisible" : false
-    },
+  defaults: {
+    "isVisible": false
+  },
 
-    initialize : function (attributes, options) {}
+  initialize: function(attributes, options) {}
 });
 
 module.exports = Underline

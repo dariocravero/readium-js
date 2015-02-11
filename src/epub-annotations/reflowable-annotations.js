@@ -1,42 +1,41 @@
-var $         = require('jquery')
-var _         = require('underscore')
-var Annotations           = require('./annotations')
-var Backbone  = require('backbone')
+var $ = require('jquery')
+var _ = require('underscore')
+var Annotations = require('./annotations')
+var Backbone = require('backbone')
 var EPUBcfi = require('epub-cfi')
 
 var ReflowableAnnotations = Backbone.Model.extend({
 
-  initialize : function (attributes, options) {
+  initialize: function(attributes, options) {
 
     this.epubCFI = EPUBcfi;
     this.annotations = new Annotations({
-      offsetTopAddition : 0, 
-      offsetLeftAddition : 0, 
-      readerBoundElement : $("html", this.get("contentDocumentDOM"))[0],
+      offsetTopAddition: 0,
+      offsetLeftAddition: 0,
+      readerBoundElement: $("html", this.get("contentDocumentDOM"))[0],
       scale: 0,
-      bbPageSetView : this.get("bbPageSetView")
+      bbPageSetView: this.get("bbPageSetView")
     });
     // inject annotation CSS into iframe 
 
 
     var annotationCSSUrl = this.get("annotationCSSUrl");
-    if (annotationCSSUrl)
-      {
-        this.injectAnnotationCSS(annotationCSSUrl);
-      }
+    if (annotationCSSUrl) {
+      this.injectAnnotationCSS(annotationCSSUrl);
+    }
 
-      // emit an event when user selects some text.
-      var epubWindow = $(this.get("contentDocumentDOM"));
-      var self = this;
-      epubWindow.on("mouseup", function(event) {
-        var range = self.getCurrentSelectionRange();
-        if (range === undefined) {
-          return;
-        }
-        if (range.startOffset - range.endOffset) {
-          self.annotations.get("bbPageSetView").trigger("textSelectionEvent", event);
-        }
-      });
+    // emit an event when user selects some text.
+    var epubWindow = $(this.get("contentDocumentDOM"));
+    var self = this;
+    epubWindow.on("mouseup", function(event) {
+      var range = self.getCurrentSelectionRange();
+      if (range === undefined) {
+        return;
+      }
+      if (range.startOffset - range.endOffset) {
+        self.annotations.get("bbPageSetView").trigger("textSelectionEvent", event);
+      }
+    });
 
 
   },
@@ -45,7 +44,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
   //  "PUBLIC" METHODS (THE API)                                                          //
   // ------------------------------------------------------------------------------------ //
 
-  redraw : function () {
+  redraw: function() {
 
     var leftAddition = -this.getPaginationLeftOffset();
     this.annotations.redrawAnnotations(0, leftAddition);
@@ -57,7 +56,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
 
 
-  addHighlight : function (CFI, id, type, styles) {
+  addHighlight: function(CFI, id, type, styles) {
 
     var CFIRangeInfo;
     var range;
@@ -80,10 +79,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
         CFI,
         this.get("contentDocumentDOM"),
         startMarkerHtml,
-        endMarkerHtml,
-        ["cfi-marker", "mo-cfi-highlight"],
-        [],
-        ["MathJax_Message"]
+        endMarkerHtml, ["cfi-marker", "mo-cfi-highlight"], [], ["MathJax_Message"]
       );
 
       // Get start and end marker for the id, using injected into elements
@@ -101,14 +97,13 @@ var ReflowableAnnotations = Backbone.Model.extend({
       if (type === "highlight") {
         this.annotations.set('scale', this.get('scale'));
         this.annotations.addHighlight(CFI, selectionInfo.selectedElements, id, 0, leftAddition, CFIRangeInfo.startElement, CFIRangeInfo.endElement, styles);
-      }
-      else if (type === "underline") {
+      } else if (type === "underline") {
         this.annotations.addUnderline(CFI, selectionInfo.selectedElements, id, 0, leftAddition, styles);
       }
 
       return {
-        CFI : CFI, 
-        selectedElements : selectionInfo.selectedElements
+        CFI: CFI,
+        selectedElements: selectionInfo.selectedElements
       };
 
     } catch (error) {
@@ -116,7 +111,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
     }
   },
 
-  addBookmark : function (CFI, id, type) {
+  addBookmark: function(CFI, id, type) {
 
     var selectedElements;
     var bookmarkMarkerHtml = this.getBookmarkMarker(CFI, id);
@@ -127,10 +122,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
       $injectedElement = this.epubCFI.injectElement(
         CFI,
         this.get("contentDocumentDOM"),
-        bookmarkMarkerHtml,
-        ["cfi-marker", "mo-cfi-highlight"],
-        [],
-        ["MathJax_Message"]
+        bookmarkMarkerHtml, ["cfi-marker", "mo-cfi-highlight"], [], ["MathJax_Message"]
       );
 
       // Add bookmark annotation here
@@ -139,8 +131,8 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
       return {
 
-        CFI : CFI, 
-        selectedElements : $injectedElement[0]
+        CFI: CFI,
+        selectedElements: $injectedElement[0]
       };
 
     } catch (error) {
@@ -148,7 +140,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
     }
   },
 
-  addImageAnnotation : function (CFI, id) {
+  addImageAnnotation: function(CFI, id) {
 
     var selectedElements;
     var bookmarkMarkerHtml = this.getBookmarkMarker(CFI, id);
@@ -157,17 +149,14 @@ var ReflowableAnnotations = Backbone.Model.extend({
     try {
       $targetImage = this.epubCFI.getTargetElement(
         CFI,
-        this.get("contentDocumentDOM"),
-        ["cfi-marker", "mo-cfi-highlight"],
-        [],
-        ["MathJax_Message"]
+        this.get("contentDocumentDOM"), ["cfi-marker", "mo-cfi-highlight"], [], ["MathJax_Message"]
       );
       this.annotations.addImageAnnotation(CFI, $targetImage[0], id);
 
       return {
 
-        CFI : CFI, 
-        selectedElements : $targetImage[0]
+        CFI: CFI,
+        selectedElements: $targetImage[0]
       };
 
     } catch (error) {
@@ -202,7 +191,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
   /// TODODM refactor thhis using getCurrentSelectionCFI (above)
 
 
-  addSelectionHighlight : function (id, type, styles) {
+  addSelectionHighlight: function(id, type, styles) {
 
     var arbitraryPackageDocCFI = "/99!"
     var generatedContentDocCFI;
@@ -218,8 +207,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
       CFI = "epubcfi(" + arbitraryPackageDocCFI + generatedContentDocCFI + ")";
       if (type === "highlight") {
         annotationInfo = this.addHighlight(CFI, id, type, styles);
-      }
-      else if (type === "underline") {
+      } else if (type === "underline") {
         annotationInfo = this.addHighlight(CFI, id, type, styles);
       }
 
@@ -227,15 +215,14 @@ var ReflowableAnnotations = Backbone.Model.extend({
       //   the CFI variable in the current scope. Since this CFI variable contains a "hacked" CFI value -
       //   only the content document portion is valid - we want to replace the annotationInfo.CFI property with
       //   the partial content document CFI portion we originally generated.
-      annotationInfo.CFI = generatedContentDocCFI;            
+      annotationInfo.CFI = generatedContentDocCFI;
       return annotationInfo;
-    }
-    else {
+    } else {
       throw new Error("Nothing selected");
     }
   },
 
-  addSelectionBookmark : function (id, type) {
+  addSelectionBookmark: function(id, type) {
 
     var arbitraryPackageDocCFI = "/99!"
     var generatedContentDocCFI;
@@ -255,13 +242,12 @@ var ReflowableAnnotations = Backbone.Model.extend({
       //   the partial content document CFI portion we originally generated.
       annotationInfo.CFI = generatedContentDocCFI;
       return annotationInfo;
-    }
-    else {
+    } else {
       throw new Error("Nothing selected");
     }
   },
 
-  addSelectionImageAnnotation : function (id) {
+  addSelectionImageAnnotation: function(id) {
 
     var arbitraryPackageDocCFI = "/99!"
     var generatedContentDocCFI;
@@ -276,10 +262,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
       selectionInfo = this.getSelectionInfo(currentSelection, ["img"]);
       firstSelectedImage = selectionInfo.selectedElements[0];
       generatedContentDocCFI = this.epubCFI.generateElementCFIComponent(
-        firstSelectedImage,
-        ["cfi-marker", "mo-cfi-highlight"],
-        [],
-        ["MathJax_Message"]
+        firstSelectedImage, ["cfi-marker", "mo-cfi-highlight"], [], ["MathJax_Message"]
       );
       CFI = "epubcfi(" + arbitraryPackageDocCFI + generatedContentDocCFI + ")";
       annotationInfo = this.addImageAnnotation(CFI, id);
@@ -290,13 +273,12 @@ var ReflowableAnnotations = Backbone.Model.extend({
       //   the partial content document CFI portion we originally generated.
       annotationInfo.CFI = generatedContentDocCFI;
       return annotationInfo;
-    }
-    else {
+    } else {
       throw new Error("Nothing selected");
     }
   },
 
-  updateAnnotationView : function (id, styles) {
+  updateAnnotationView: function(id, styles) {
 
     var annotationViews = this.annotations.updateAnnotationView(id, styles);
 
@@ -307,13 +289,13 @@ var ReflowableAnnotations = Backbone.Model.extend({
   //  "PRIVATE" HELPERS                                                                   //
   // ------------------------------------------------------------------------------------ //
 
-  getSelectionInfo : function (selectedRange, elementType) {
+  getSelectionInfo: function(selectedRange, elementType) {
 
     // Generate CFI for selected text
     var CFI = this.generateRangeCFI(selectedRange);
     var intervalState = {
-      startElementFound : false,
-      endElementFound : false
+      startElementFound: false,
+      endElementFound: false
     };
     var selectedElements = [];
 
@@ -322,22 +304,22 @@ var ReflowableAnnotations = Backbone.Model.extend({
     }
 
     this.findSelectedElements(
-      selectedRange.commonAncestorContainer, 
-      selectedRange.startContainer, 
+      selectedRange.commonAncestorContainer,
+      selectedRange.startContainer,
       selectedRange.endContainer,
       intervalState,
-      selectedElements, 
+      selectedElements,
       elementType
     );
 
     // Return a list of selected text nodes and the CFI
     return {
-      CFI : CFI,
-      selectedElements : selectedElements
+      CFI: CFI,
+      selectedElements: selectedElements
     };
   },
 
-  generateRangeCFI : function (selectedRange) {
+  generateRangeCFI: function(selectedRange) {
 
     var startNode = selectedRange.startContainer;
     var endNode = selectedRange.endContainer;
@@ -351,22 +333,18 @@ var ReflowableAnnotations = Backbone.Model.extend({
       endOffset = selectedRange.endOffset;
 
       rangeCFIComponent = this.epubCFI.generateCharOffsetRangeComponent(
-        startNode, 
-        startOffset, 
-        endNode, 
-        endOffset,
-        ["cfi-marker", "mo-cfi-highlight"],
-        [],
-        ["MathJax_Message"]
+        startNode,
+        startOffset,
+        endNode,
+        endOffset, ["cfi-marker", "mo-cfi-highlight"], [], ["MathJax_Message"]
       );
       return rangeCFIComponent;
-    }
-    else {
+    } else {
       throw new Error("Selection start and end must be text nodes");
     }
   },
 
-  generateCharOffsetCFI : function (selectedRange) {
+  generateCharOffsetCFI: function(selectedRange) {
 
     // Character offset
     var startNode = selectedRange.startContainer;
@@ -376,17 +354,14 @@ var ReflowableAnnotations = Backbone.Model.extend({
     if (startNode.nodeType === Node.TEXT_NODE) {
       charOffsetCFI = this.epubCFI.generateCharacterOffsetCFIComponent(
         startNode,
-        startOffset,
-        ["cfi-marker", "mo-cfi-highlight"],
-        [],
-        ["MathJax_Message"]
+        startOffset, ["cfi-marker", "mo-cfi-highlight"], [], ["MathJax_Message"]
       );
     }
     return charOffsetCFI;
   },
 
   // REFACTORING CANDIDATE: Convert this to jquery
-  findSelectedElements : function (currElement, startElement, endElement, intervalState, selectedElements, elementTypes) {
+  findSelectedElements: function(currElement, startElement, endElement, intervalState, selectedElements, elementTypes) {
 
     if (currElement === startElement) {
       intervalState.startElementFound = true;
@@ -416,26 +391,25 @@ var ReflowableAnnotations = Backbone.Model.extend({
     }
   },
 
-  addElement : function (currElement, selectedElements, elementTypes) {
+  addElement: function(currElement, selectedElements, elementTypes) {
 
     // Check if the node is one of the types
-    _.each(elementTypes, function (elementType) {
+    _.each(elementTypes, function(elementType) {
 
       if (elementType === "text") {
         if (currElement.nodeType === Node.TEXT_NODE) {
           selectedElements.push(currElement);
         }
-      }
-      else {
+      } else {
         if ($(currElement).is(elementType)) {
-          selectedElements.push(currElement);    
+          selectedElements.push(currElement);
         }
       }
     });
   },
 
   // Rationale: This is a cross-browser method to get the currently selected text
-  getCurrentSelectionRange : function () {
+  getCurrentSelectionRange: function() {
 
     var currentSelection;
     var iframeDocument = this.get("contentDocumentDOM");
@@ -444,19 +418,17 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
       if (currentSelection && currentSelection.rangeCount && (currentSelection.anchorOffset !== currentSelection.focusOffset)) {
         return currentSelection.getRangeAt(0);
-      }else{
+      } else {
         return undefined;
       }
-    }
-    else if (iframeDocument.selection) {
+    } else if (iframeDocument.selection) {
       return iframeDocument.selection.createRange();
-    }
-    else {
+    } else {
       return undefined;
     }
   },
 
-  getPaginationLeftOffset : function () {
+  getPaginationLeftOffset: function() {
 
     var $htmlElement = $("html", this.get("contentDocumentDOM"));
     var offsetLeftPixels = $htmlElement.css("left");
@@ -464,26 +436,30 @@ var ReflowableAnnotations = Backbone.Model.extend({
     return offsetLeft;
   },
 
-  getBookmarkMarker : function (CFI, id) {
+  getBookmarkMarker: function(CFI, id) {
 
     return "<span class='bookmark-marker cfi-marker' id='" + id + "' data-cfi='" + CFI + "'></span>";
   },
 
-  getRangeStartMarker : function (CFI, id) {
+  getRangeStartMarker: function(CFI, id) {
 
     return "<span class='range-start-marker cfi-marker' id='start-" + id + "' data-cfi='" + CFI + "'></span>";
   },
 
-  getRangeEndMarker : function (CFI, id) {
+  getRangeEndMarker: function(CFI, id) {
 
     return "<span class='range-end-marker cfi-marker' id='end-" + id + "' data-cfi='" + CFI + "'></span>";
   },
 
-  injectAnnotationCSS : function (annotationCSSUrl) {
+  injectAnnotationCSS: function(annotationCSSUrl) {
 
     var $contentDocHead = $("head", this.get("contentDocumentDOM"));
     $contentDocHead.append(
-      $("<link/>", { rel : "stylesheet", href : annotationCSSUrl, type : "text/css" })
+      $("<link/>", {
+        rel: "stylesheet",
+        href: annotationCSSUrl,
+        type: "text/css"
+      })
     );
   }
 });

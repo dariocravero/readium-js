@@ -108,8 +108,8 @@ Then when the user clicks on the highlight the following will show up in the con
 
 */
 
-var _               = require('underscore')
-var Backbone        = require('backbone')
+var _ = require('underscore')
+var Backbone = require('backbone')
 var EpubAnnotations = require('../../epub-annotations')
 
 /**
@@ -120,111 +120,113 @@ var EpubAnnotations = require('../../epub-annotations')
  */
 function AnnotationsManager(proxyObj, options) {
 
-    var self = this;
-    var liveAnnotations = {};
-    var spines = {};
-    var proxy = proxyObj; 
-    var annotationCSSUrl = options.annotationCSSUrl;
+  var self = this;
+  var liveAnnotations = {};
+  var spines = {};
+  var proxy = proxyObj;
+  var annotationCSSUrl = options.annotationCSSUrl;
 
-    if (!annotationCSSUrl) {
-        console.warn("WARNING! Annotations CSS not supplied. Highlighting is not going to work.");
+  if (!annotationCSSUrl) {
+    console.warn("WARNING! Annotations CSS not supplied. Highlighting is not going to work.");
+  }
+
+  _.extend(self, Backbone.Events);
+
+  // we want to bubble up all of the events that annotations module may trigger up.
+  this.on("all", function(eventName) {
+    var args = Array.prototype.slice.call(arguments);
+    // mangle annotationClicked event. What really needs to happen is, the annotation_module needs to return a 
+    // bare Cfi, and this class should append the idref.
+    var annotationClickedEvent = 'annotationClicked';
+    if (args.length && args[0] === annotationClickedEvent) {
+      for (var spineIndex in liveAnnotations) {
+        var jQueryEvent = args[4];
+        var annotationId = args[3];
+        var fullFakeCfi = args[2];
+        var type = args[1];
+        if (liveAnnotations[spineIndex].getHighlight(annotationId)) {
+          var idref = spines[spineIndex].idref;
+          var partialCfi = getPartialCfi(fullFakeCfi);
+          args = [annotationClickedEvent, type, idref, partialCfi, annotationId, jQueryEvent];
+        }
+      }
     }
+    self['trigger'].apply(proxy, args);
+  });
 
-    _.extend(self, Backbone.Events);
+  this.attachAnnotations = function($iframe, spineItem) {
+    var epubDocument = $iframe[0].contentDocument;
+    liveAnnotations[spineItem.index] = new EpubAnnotations(epubDocument, self, annotationCSSUrl);
+    spines[spineItem.index] = spineItem;
 
-    // we want to bubble up all of the events that annotations module may trigger up.
-    this.on("all", function(eventName) {
-        var args = Array.prototype.slice.call(arguments);
-        // mangle annotationClicked event. What really needs to happen is, the annotation_module needs to return a 
-        // bare Cfi, and this class should append the idref.
-        var annotationClickedEvent = 'annotationClicked';
-        if (args.length && args[0] === annotationClickedEvent) {
-            for (var spineIndex in liveAnnotations)
-            {
-                var jQueryEvent = args[4];
-                var annotationId = args[3];
-                var fullFakeCfi = args[2];
-                var type = args[1];
-                if (liveAnnotations[spineIndex].getHighlight(annotationId)) {
-                    var idref = spines[spineIndex].idref;
-                    var partialCfi = getPartialCfi(fullFakeCfi);
-                    args = [annotationClickedEvent, type, idref, partialCfi, annotationId, jQueryEvent];
-                }
-            }
-        }
-        self['trigger'].apply(proxy, args);
-    });
-
-    this.attachAnnotations = function($iframe, spineItem) {
-        var epubDocument = $iframe[0].contentDocument;
-        liveAnnotations[spineItem.index] = new EpubAnnotations(epubDocument, self, annotationCSSUrl);
-        spines[spineItem.index] = spineItem;
-
-        // check to see which spine indecies can be culled depending on the distance from current spine item
-        for(var spineIndex in liveAnnotations) {
-            if (Math.abs(spineIndex - spineIndex.index) > 3) {
-                delete liveAnnotations[spineIndex];
-            }
-        }
-    };
-
-
-    this.getCurrentSelectionCfi = function() {
-        for(var spine in liveAnnotations) {
-            var annotationsForView = liveAnnotations[spine]; 
-            var partialCfi = annotationsForView.getCurrentSelectionCFI();
-            if (partialCfi) {
-                return {"idref":spines[spine].idref, "cfi":partialCfi};
-            }
-        }
-        return undefined;
-    };
-
-    this.addSelectionHighlight = function(id, type) {
-        for(spine in liveAnnotations) {
-            var annotationsForView = liveAnnotations[spine]; 
-            if (annotationsForView.getCurrentSelectionCFI()) {
-                var annotation = annotationsForView.addSelectionHighlight(id, type);
-                annotation.idref = spines[spine].idref;
-                return annotation;
-            }
-        }
-        return undefined;
-    };
-
-    this.addHighlight = function(spineIdRef, partialCfi, id, type, styles) {
-        for(var spine in liveAnnotations) {
-            if (spines[spine].idref === spineIdRef) {
-                var fakeCfi = "epubcfi(/99!" + partialCfi + ")";
-                var annotationsForView = liveAnnotations[spine]; 
-                var annotation = annotationsForView.addHighlight(fakeCfi, id, type, styles);
-                annotation.idref = spineIdRef;
-                annotation.CFI = getPartialCfi(annotation.CFI);
-                return annotation;
-            }
-        }
-        return undefined;
-    };
-
-    this.removeHighlight = function(id) {
-        var result = undefined;
-        for(var spine in liveAnnotations) {
-            var annotationsForView = liveAnnotations[spine]; 
-            result  = annotationsForView.removeHighlight(id);
-        }
-        return result;
-    };
-
-
-
-    function getPartialCfi(CFI) {
-        var cfiWrapperPattern = new RegExp("^.*!")
-        // remove epubcfi( and indirection step
-        var partiallyNakedCfi = CFI.replace(cfiWrapperPattern, "");
-        // remove last paren
-        var nakedCfi = partiallyNakedCfi.substring(0, partiallyNakedCfi.length -1);
-        return nakedCfi;
+    // check to see which spine indecies can be culled depending on the distance from current spine item
+    for (var spineIndex in liveAnnotations) {
+      if (Math.abs(spineIndex - spineIndex.index) > 3) {
+        delete liveAnnotations[spineIndex];
+      }
     }
+  };
+
+
+  this.getCurrentSelectionCfi = function() {
+    for (var spine in liveAnnotations) {
+      var annotationsForView = liveAnnotations[spine];
+      var partialCfi = annotationsForView.getCurrentSelectionCFI();
+      if (partialCfi) {
+        return {
+          "idref": spines[spine].idref,
+          "cfi": partialCfi
+        };
+      }
+    }
+    return undefined;
+  };
+
+  this.addSelectionHighlight = function(id, type) {
+    for (spine in liveAnnotations) {
+      var annotationsForView = liveAnnotations[spine];
+      if (annotationsForView.getCurrentSelectionCFI()) {
+        var annotation = annotationsForView.addSelectionHighlight(id, type);
+        annotation.idref = spines[spine].idref;
+        return annotation;
+      }
+    }
+    return undefined;
+  };
+
+  this.addHighlight = function(spineIdRef, partialCfi, id, type, styles) {
+    for (var spine in liveAnnotations) {
+      if (spines[spine].idref === spineIdRef) {
+        var fakeCfi = "epubcfi(/99!" + partialCfi + ")";
+        var annotationsForView = liveAnnotations[spine];
+        var annotation = annotationsForView.addHighlight(fakeCfi, id, type, styles);
+        annotation.idref = spineIdRef;
+        annotation.CFI = getPartialCfi(annotation.CFI);
+        return annotation;
+      }
+    }
+    return undefined;
+  };
+
+  this.removeHighlight = function(id) {
+    var result = undefined;
+    for (var spine in liveAnnotations) {
+      var annotationsForView = liveAnnotations[spine];
+      result = annotationsForView.removeHighlight(id);
+    }
+    return result;
+  };
+
+
+
+  function getPartialCfi(CFI) {
+    var cfiWrapperPattern = new RegExp("^.*!")
+      // remove epubcfi( and indirection step
+    var partiallyNakedCfi = CFI.replace(cfiWrapperPattern, "");
+    // remove last paren
+    var nakedCfi = partiallyNakedCfi.substring(0, partiallyNakedCfi.length - 1);
+    return nakedCfi;
+  }
 
 
 };

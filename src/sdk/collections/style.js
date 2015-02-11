@@ -31,73 +31,72 @@ var Style = require('../models/style')
  */
 function StyleCollection() {
 
-    var _styles = [];
+  var _styles = [];
 
-    this.clear = function() {
-        _styles.length = 0;
+  this.clear = function() {
+    _styles.length = 0;
 
-    };
+  };
 
-    this.findStyle = function(selector) {
+  this.findStyle = function(selector) {
 
-        var count = _styles.length;
-        for(var i = 0; i < count; i++) {
-            if(_styles[i].selector === selector) {
-                return _styles[i];
-            }
-        }
-
-        return undefined;
-    };
-
-    this.addStyle = function(selector, declarations) {
-
-        var style = this.findStyle(selector);
-
-        if(style) {
-            style.setDeclarations(declarations);
-        }
-        else {
-            style = new Style(selector, declarations);
-            _styles.push(style);
-        }
-
-        return style;
-    };
-
-    this.removeStyle = function(selector) {
-        
-        var count = _styles.length;
-
-        for(var i = 0; i < count; i++) {
-
-            if(_styles[i].selector === selector) {
-                _styles.splice(i, 1);
-                return;
-            }
-        }
-    };
-
-    this.getStyles = function() {
-        return _styles;
-    };
-
-    this.resetStyleValues = function() {
-
-        var count = _styles.length;
-
-        for(var i = 0; i < count; i++) {
-
-            var style = _styles[i];
-            var declarations = style.declarations;
-
-            for(var prop in declarations) {
-                if(declarations.hasOwnProperty(prop)) {
-                    declarations[prop] = '';
-                }
-            }
-        }
+    var count = _styles.length;
+    for (var i = 0; i < count; i++) {
+      if (_styles[i].selector === selector) {
+        return _styles[i];
+      }
     }
+
+    return undefined;
+  };
+
+  this.addStyle = function(selector, declarations) {
+
+    var style = this.findStyle(selector);
+
+    if (style) {
+      style.setDeclarations(declarations);
+    } else {
+      style = new Style(selector, declarations);
+      _styles.push(style);
+    }
+
+    return style;
+  };
+
+  this.removeStyle = function(selector) {
+
+    var count = _styles.length;
+
+    for (var i = 0; i < count; i++) {
+
+      if (_styles[i].selector === selector) {
+        _styles.splice(i, 1);
+        return;
+      }
+    }
+  };
+
+  this.getStyles = function() {
+    return _styles;
+  };
+
+  this.resetStyleValues = function() {
+
+    var count = _styles.length;
+
+    for (var i = 0; i < count; i++) {
+
+      var style = _styles[i];
+      var declarations = style.declarations;
+
+      for (var prop in declarations) {
+        if (declarations.hasOwnProperty(prop)) {
+          declarations[prop] = '';
+        }
+      }
+    }
+  }
 
 };
 

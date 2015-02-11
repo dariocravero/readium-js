@@ -3,97 +3,97 @@ var Underline = require('./underline')
 
 var UnderlineView = Backbone.View.extend({
 
-    el : "<div class='underline-range'> \
+  el: "<div class='underline-range'> \
              <div class='transparent-part'></div> \
              <div class='underline-part'></div> \
           </div>",
 
-    events : {
-        "mouseenter" : "underlineEvent",
-        "mouseleave" : "underlineEvent",
-        "click" : "underlineEvent"
-    },
+  events: {
+    "mouseenter": "underlineEvent",
+    "mouseleave": "underlineEvent",
+    "click": "underlineEvent"
+  },
 
-    initialize : function (options) {
+  initialize: function(options) {
 
-        this.underline = new Underline({
-            CFI : options.CFI,
-            top : options.top,
-            left : options.left,
-            height : options.height,
-            width : options.width,
-            styles : options.styles,
-            underlineGroupCallback : options.underlineGroupCallback,
-            callbackContext : options.callbackContext
-        });
+    this.underline = new Underline({
+      CFI: options.CFI,
+      top: options.top,
+      left: options.left,
+      height: options.height,
+      width: options.width,
+      styles: options.styles,
+      underlineGroupCallback: options.underlineGroupCallback,
+      callbackContext: options.callbackContext
+    });
 
-        this.$transparentElement = $(".transparent-part", this.$el);
-        this.$underlineElement = $(".underline-part", this.$el);
-    },
+    this.$transparentElement = $(".transparent-part", this.$el);
+    this.$underlineElement = $(".underline-part", this.$el);
+  },
 
-    render : function () {
+  render: function() {
 
-        this.setCSS();
-        return this.el;
-    },
+    this.setCSS();
+    return this.el;
+  },
 
-    resetPosition : function (top, left, height, width) {
+  resetPosition: function(top, left, height, width) {
 
-        this.underline.set({
-            top : top,
-            left : left,
-            height : height,
-            width : width
-        });
-        this.setCSS();
-    },
+    this.underline.set({
+      top: top,
+      left: left,
+      height: height,
+      width: width
+    });
+    this.setCSS();
+  },
 
-    setStyles : function (styles) {
+  setStyles: function(styles) {
 
-        this.underline.set({
-            styles : styles,
-        });
-        this.render();
-    },
+    this.underline.set({
+      styles: styles,
+    });
+    this.render();
+  },
 
-    setCSS : function () {
-        var styles = this.underline.get("styles") || {};
-        
-        this.$el.css({ 
-            "top" : this.underline.get("top") + "px",
-            "left" : this.underline.get("left") + "px",
-            "height" : this.underline.get("height") + "px",
-            "width" : this.underline.get("width") + "px",
-        });
+  setCSS: function() {
+    var styles = this.underline.get("styles") || {};
 
-        // Underline part
-        this.$underlineElement.css({
-            "background-color" : styles.fill_color || "normal",
-        });
+    this.$el.css({
+      "top": this.underline.get("top") + "px",
+      "left": this.underline.get("left") + "px",
+      "height": this.underline.get("height") + "px",
+      "width": this.underline.get("width") + "px",
+    });
 
-        
-        this.$underlineElement.addClass("underline");
-    },
+    // Underline part
+    this.$underlineElement.css({
+      "background-color": styles.fill_color || "normal",
+    });
 
-    underlineEvent : function (event) {
 
-        event.stopPropagation();
-        var underlineGroupCallback = this.underline.get("underlineGroupCallback");
-        var underlineGroupContext = this.underline.get("callbackContext");
-        underlineGroupContext.underlineGroupCallback(event);
-    },
+    this.$underlineElement.addClass("underline");
+  },
 
-    setBaseUnderline : function () {
+  underlineEvent: function(event) {
 
-        this.$underlineElement.addClass("underline");
-        this.$underlineElement.removeClass("hover-underline");
-    },
+    event.stopPropagation();
+    var underlineGroupCallback = this.underline.get("underlineGroupCallback");
+    var underlineGroupContext = this.underline.get("callbackContext");
+    underlineGroupContext.underlineGroupCallback(event);
+  },
 
-    setHoverUnderline : function () {
+  setBaseUnderline: function() {
 
-        this.$underlineElement.addClass("hover-underline");
-        this.$underlineElement.removeClass("underline");
-    },
+    this.$underlineElement.addClass("underline");
+    this.$underlineElement.removeClass("hover-underline");
+  },
+
+  setHoverUnderline: function() {
+
+    this.$underlineElement.addClass("hover-underline");
+    this.$underlineElement.removeClass("underline");
+  },
 });
 
 

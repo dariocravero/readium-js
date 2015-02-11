@@ -1,26 +1,26 @@
-var $         = require('jquery')
-var _         = require('underscore')
-var Backbone  = require('backbone')
-var HighlightView         = require('./highlight-view')
-var TextLineInferrer      = require('./text-line-inferrer')
+var $ = require('jquery')
+var _ = require('underscore')
+var Backbone = require('backbone')
+var HighlightView = require('./highlight-view')
+var TextLineInferrer = require('./text-line-inferrer')
 
 var HighlightGroup = Backbone.Model.extend({
 
-  defaults : function () {
+  defaults: function() {
     return {
-      "selectedNodes" : [],
-      "highlightViews" : []
+      "selectedNodes": [],
+      "highlightViews": []
     };
   },
 
-  initialize : function (attributes, options) {
+  initialize: function(attributes, options) {
     this.set("scale", attributes.scale);
     this.constructHighlightViews();
   },
 
   // --------------- PRIVATE HELPERS ---------------------------------------
 
-  highlightGroupCallback : function (event) {
+  highlightGroupCallback: function(event) {
 
     var that = this;
 
@@ -39,25 +39,24 @@ var HighlightGroup = Backbone.Model.extend({
 
 
     // Events that are called on each member of the group
-    _.each(this.get("highlightViews"), function (highlightView) {
+    _.each(this.get("highlightViews"), function(highlightView) {
 
       if (event.type === "mouseenter") {
-        highlightView.setHoverHighlight();    
-      }
-      else if (event.type === "mouseleave") {
+        highlightView.setHoverHighlight();
+      } else if (event.type === "mouseleave") {
         highlightView.setBaseHighlight();
       }
     });
   },
 
-  constructHighlightViews : function () {
+  constructHighlightViews: function() {
 
     var that = this;
     var rectList = [];
     var inferrer;
     var inferredLines;
 
-    _.each(this.get("selectedNodes"), function (node, index) {
+    _.each(this.get("selectedNodes"), function(node, index) {
 
       var rects;
       var range = document.createRange();
@@ -65,7 +64,7 @@ var HighlightGroup = Backbone.Model.extend({
       rects = range.getClientRects();
 
       // REFACTORING CANDIDATE: Maybe a better way to append an array here
-      _.each(rects, function (rect) {
+      _.each(rects, function(rect) {
         rectList.push(rect);
       });
     });
@@ -75,7 +74,7 @@ var HighlightGroup = Backbone.Model.extend({
 
     var scale = this.get("scale");
 
-    _.each(inferredLines, function (line, index) {
+    _.each(inferredLines, function(line, index) {
 
       var highlightTop = line.startTop / scale;;
       var highlightLeft = line.left / scale;;
@@ -83,27 +82,31 @@ var HighlightGroup = Backbone.Model.extend({
       var highlightWidth = line.width / scale;;
 
       var highlightView = new HighlightView({
-        CFI : that.get("CFI"),
-        top : highlightTop + that.get("offsetTopAddition"),
-        left : highlightLeft + that.get("offsetLeftAddition"),
-        height : highlightHeight,
-        width : highlightWidth,
-        styles : that.get('styles'),
-        highlightGroupCallback : that.highlightGroupCallback,
-        callbackContext : that
+        CFI: that.get("CFI"),
+        top: highlightTop + that.get("offsetTopAddition"),
+        left: highlightLeft + that.get("offsetLeftAddition"),
+        height: highlightHeight,
+        width: highlightWidth,
+        styles: that.get('styles'),
+        highlightGroupCallback: that.highlightGroupCallback,
+        callbackContext: that
       });
 
       that.get("highlightViews").push(highlightView);
     });
   },
 
-  resetHighlights : function (viewportElement, offsetTop, offsetLeft) {
+  resetHighlights: function(viewportElement, offsetTop, offsetLeft) {
 
     if (offsetTop) {
-      this.set({ offsetTopAddition : offsetTop });
+      this.set({
+        offsetTopAddition: offsetTop
+      });
     }
     if (offsetLeft) {
-      this.set({ offsetLeftAddition : offsetLeft });
+      this.set({
+        offsetLeftAddition: offsetLeft
+      });
     }
 
     this.destroyCurrentHighlights();
@@ -112,9 +115,9 @@ var HighlightGroup = Backbone.Model.extend({
   },
 
   // REFACTORING CANDIDATE: Ensure that event listeners are being properly cleaned up. 
-  destroyCurrentHighlights : function () { 
+  destroyCurrentHighlights: function() {
 
-    _.each(this.get("highlightViews"), function (highlightView) {
+    _.each(this.get("highlightViews"), function(highlightView) {
       highlightView.remove();
       highlightView.off();
     });
@@ -122,27 +125,29 @@ var HighlightGroup = Backbone.Model.extend({
     this.get("highlightViews").length = 0;
   },
 
-  renderHighlights : function (viewportElement) {
+  renderHighlights: function(viewportElement) {
 
-    _.each(this.get("highlightViews"), function (view, index) {
+    _.each(this.get("highlightViews"), function(view, index) {
       $(viewportElement).append(view.render());
     });
   },
 
-  toInfo : function () {
+  toInfo: function() {
 
     return {
 
-      id : this.get("id"),
-      type : "highlight",
-      CFI : this.get("CFI")
+      id: this.get("id"),
+      type: "highlight",
+      CFI: this.get("CFI")
     };
   },
 
-  setStyles : function (styles) {
+  setStyles: function(styles) {
     var highlightViews = this.get('highlightViews');
 
-    this.set({styles : styles});
+    this.set({
+      styles: styles
+    });
 
     _.each(highlightViews, function(view, index) {
       view.setStyles(styles);

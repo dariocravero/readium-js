@@ -7,24 +7,24 @@
  */
 function ResolveContentRef(contentRef, sourceFileHref) {
 
-    if(!sourceFileHref) {
-        return contentRef;
-    }
+  if (!sourceFileHref) {
+    return contentRef;
+  }
 
-    var sourceParts = sourceFileHref.split("/");
-    sourceParts.pop(); //remove source file name
+  var sourceParts = sourceFileHref.split("/");
+  sourceParts.pop(); //remove source file name
 
-    var pathComponents = contentRef.split("/");
+  var pathComponents = contentRef.split("/");
 
-    while(sourceParts.length  > 0 && pathComponents[0] === "..") {
+  while (sourceParts.length > 0 && pathComponents[0] === "..") {
 
-        sourceParts.pop();
-        pathComponents.splice(0, 1);
-    }
+    sourceParts.pop();
+    pathComponents.splice(0, 1);
+  }
 
-    var combined = sourceParts.concat(pathComponents);
+  var combined = sourceParts.concat(pathComponents);
 
-    return combined.join("/");
+  return combined.join("/");
 
 };
 

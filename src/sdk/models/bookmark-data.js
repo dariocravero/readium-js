@@ -29,23 +29,23 @@
  */
 function BookmarkData(idref, contentCFI) {
 
-    /**
-     * spine item idref
-     * @property idref
-     * @type {string}
-     */
-    this.idref = idref;
+  /**
+   * spine item idref
+   * @property idref
+   * @type {string}
+   */
+  this.idref = idref;
 
-    /**
-     * cfi of the first visible element
-     * @property contentCFI
-     * @type {string}
-     */
-    this.contentCFI = contentCFI;
+  /**
+   * cfi of the first visible element
+   * @property contentCFI
+   * @type {string}
+   */
+  this.contentCFI = contentCFI;
 
-    this.toString = function () {
-        return JSON.stringify(this);
-    }
+  this.toString = function() {
+    return JSON.stringify(this);
+  }
 };
 
 module.exports = BookmarkData

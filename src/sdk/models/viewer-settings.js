@@ -30,86 +30,82 @@
  */
 var ViewerSettings = function(settingsData) {
 
-    var self = this;
+  var self = this;
 
-    this.syntheticSpread = "auto";
-    this.fontSize = 100;
-    this.columnGap = 20;
+  this.syntheticSpread = "auto";
+  this.fontSize = 100;
+  this.columnGap = 20;
 
-    this.mediaOverlaysPreservePlaybackWhenScroll = false;
+  this.mediaOverlaysPreservePlaybackWhenScroll = false;
 
-    this.mediaOverlaysSkipSkippables = false;
-    this.mediaOverlaysEscapeEscapables = true;
+  this.mediaOverlaysSkipSkippables = false;
+  this.mediaOverlaysEscapeEscapables = true;
 
-    this.mediaOverlaysSkippables = [];
-    this.mediaOverlaysEscapables = [];
-    
-    this.mediaOverlaysEnableClick = true;
-    this.mediaOverlaysRate = 1;
-    this.mediaOverlaysVolume = 100;
-    
-    this.mediaOverlaysSynchronizationGranularity = "";
+  this.mediaOverlaysSkippables = [];
+  this.mediaOverlaysEscapables = [];
 
-    this.mediaOverlaysAutomaticPageTurn = true;
+  this.mediaOverlaysEnableClick = true;
+  this.mediaOverlaysRate = 1;
+  this.mediaOverlaysVolume = 100;
 
-    this.enableGPUHardwareAccelerationCSS3D = false;
+  this.mediaOverlaysSynchronizationGranularity = "";
 
-    // -1 ==> disable
-    // [0...n] ==> index of transition in pre-defined array
-    this.pageTransition = -1;
-    
-    this.scroll = "auto";
+  this.mediaOverlaysAutomaticPageTurn = true;
 
-    function buildArray(str)
-    {
-        var retArr = [];
-        var arr = str.split(/[\s,;]+/); //','
-        for (var i = 0; i < arr.length; i++)
-        {
-            var item = arr[i].trim();
-            if (item !== "")
-            {
-                retArr.push(item);
-            }
-        }
-        return retArr;
+  this.enableGPUHardwareAccelerationCSS3D = false;
+
+  // -1 ==> disable
+  // [0...n] ==> index of transition in pre-defined array
+  this.pageTransition = -1;
+
+  this.scroll = "auto";
+
+  function buildArray(str) {
+    var retArr = [];
+    var arr = str.split(/[\s,;]+/); //','
+    for (var i = 0; i < arr.length; i++) {
+      var item = arr[i].trim();
+      if (item !== "") {
+        retArr.push(item);
+      }
+    }
+    return retArr;
+  }
+
+  function mapProperty(propName, settingsData, functionToApply) {
+
+    if (settingsData[propName] !== undefined) {
+      if (functionToApply) {
+
+        self[propName] = functionToApply(settingsData[propName]);
+      } else {
+        self[propName] = settingsData[propName];
+      }
     }
 
-    function mapProperty(propName, settingsData, functionToApply) {
+  }
 
-        if(settingsData[propName] !== undefined) {
-            if(functionToApply) {
+  this.update = function(settingsData) {
 
-                self[propName] = functionToApply(settingsData[propName]);
-            }
-            else {
-                self[propName] = settingsData[propName];
-            }
-        }
+    mapProperty("columnGap", settingsData);
+    mapProperty("fontSize", settingsData);
+    mapProperty("mediaOverlaysPreservePlaybackWhenScroll", settingsData);
+    mapProperty("mediaOverlaysSkipSkippables", settingsData);
+    mapProperty("mediaOverlaysEscapeEscapables", settingsData);
+    mapProperty("mediaOverlaysSkippables", settingsData, buildArray);
+    mapProperty("mediaOverlaysEscapables", settingsData, buildArray);
+    mapProperty("mediaOverlaysEnableClick", settingsData);
+    mapProperty("mediaOverlaysRate", settingsData);
+    mapProperty("mediaOverlaysVolume", settingsData);
+    mapProperty("mediaOverlaysSynchronizationGranularity", settingsData);
+    mapProperty("mediaOverlaysAutomaticPageTurn", settingsData);
+    mapProperty("scroll", settingsData);
+    mapProperty("syntheticSpread", settingsData);
+    mapProperty("pageTransition", settingsData);
+    mapProperty("enableGPUHardwareAccelerationCSS3D", settingsData);
+  };
 
-    }
-
-    this.update = function(settingsData) {
-
-        mapProperty("columnGap", settingsData);
-        mapProperty("fontSize", settingsData);
-        mapProperty("mediaOverlaysPreservePlaybackWhenScroll", settingsData);
-        mapProperty("mediaOverlaysSkipSkippables", settingsData);
-        mapProperty("mediaOverlaysEscapeEscapables", settingsData);
-        mapProperty("mediaOverlaysSkippables", settingsData, buildArray);
-        mapProperty("mediaOverlaysEscapables", settingsData, buildArray);
-        mapProperty("mediaOverlaysEnableClick", settingsData);
-        mapProperty("mediaOverlaysRate", settingsData);
-        mapProperty("mediaOverlaysVolume", settingsData);
-        mapProperty("mediaOverlaysSynchronizationGranularity", settingsData);
-        mapProperty("mediaOverlaysAutomaticPageTurn", settingsData);
-        mapProperty("scroll", settingsData);
-        mapProperty("syntheticSpread", settingsData);
-        mapProperty("pageTransition", settingsData);
-        mapProperty("enableGPUHardwareAccelerationCSS3D", settingsData);
-    };
-
-    this.update(settingsData);
+  this.update(settingsData);
 };
 
 module.exports = ViewerSettings;

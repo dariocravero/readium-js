@@ -9,15 +9,9 @@ var ViewsConstants = require('../views/constants')
  */
 function isRenditionSpreadPermittedForItem(item, orientation) {
 
-    var rendition_spread = item.getRenditionSpread();
+  var rendition_spread = item.getRenditionSpread();
 
-    return  !rendition_spread
-        ||  rendition_spread == SpineItemConstants.RENDITION_SPREAD_BOTH
-        ||  rendition_spread == SpineItemConstants.RENDITION_SPREAD_AUTO
-        ||  (rendition_spread == SpineItemConstants.RENDITION_SPREAD_LANDSCAPE
-        && orientation == ViewsConstants.ORIENTATION_LANDSCAPE)
-        ||  (rendition_spread == SpineItemConstants.RENDITION_SPREAD_PORTRAIT
-        && orientation == ViewsConstants.ORIENTATION_PORTRAIT );
+  return !rendition_spread || rendition_spread == SpineItemConstants.RENDITION_SPREAD_BOTH || rendition_spread == SpineItemConstants.RENDITION_SPREAD_AUTO || (rendition_spread == SpineItemConstants.RENDITION_SPREAD_LANDSCAPE && orientation == ViewsConstants.ORIENTATION_LANDSCAPE) || (rendition_spread == SpineItemConstants.RENDITION_SPREAD_PORTRAIT && orientation == ViewsConstants.ORIENTATION_PORTRAIT);
 };
 
 module.exports = isRenditionSpreadPermittedForItem

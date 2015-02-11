@@ -41,7 +41,7 @@ function PublicationFetcher(bookRoot, jsLibRoot) {
 
   this.markupParser = new MarkupParser();
 
-  this.initialize =  function(callback) {
+  this.initialize = function(callback) {
 
     var isEpubExploded = isExploded();
 
@@ -76,7 +76,7 @@ function PublicationFetcher(bookRoot, jsLibRoot) {
     if (isExploded) {
       console.log('using new PlainResourceFetcher');
       _resourceFetcher = new PlainResourceFetcher(self, bookRoot);
-      _resourceFetcher.initialize(function () {
+      _resourceFetcher.initialize(function() {
         callback(_resourceFetcher);
       });
       return;
@@ -98,7 +98,7 @@ function PublicationFetcher(bookRoot, jsLibRoot) {
    *
    * false if documents can be fed directly into a window or iframe by src URL without using special fetching logic.
    */
-  this.shouldConstructDomProgrammatically = function (){
+  this.shouldConstructDomProgrammatically = function() {
     return _shouldConstructDomProgrammatically;
   };
 
@@ -123,165 +123,166 @@ function PublicationFetcher(bookRoot, jsLibRoot) {
     return jsLibRoot;
   }
 
-    this.getPackageUrl = function() {
-      return _resourceFetcher.getPackageUrl();
-    };
+  this.getPackageUrl = function() {
+    return _resourceFetcher.getPackageUrl();
+  };
 
-    this.fetchContentDocument = function (attachedData, loadedDocumentUri, contentDocumentResolvedCallback, errorCallback) {
+  this.fetchContentDocument = function(attachedData, loadedDocumentUri, contentDocumentResolvedCallback, errorCallback) {
 
-      var contentDocumentFetcher = new ContentDocumentFetcher(self, attachedData.spineItem, loadedDocumentUri, _publicationResourcesCache);
-      contentDocumentFetcher.fetchContentDocumentAndResolveDom(contentDocumentResolvedCallback, function (err) {
-        _handleError(err);
-        errorCallback(err);
-      });
-    };
+    var contentDocumentFetcher = new ContentDocumentFetcher(self, attachedData.spineItem, loadedDocumentUri, _publicationResourcesCache);
+    contentDocumentFetcher.fetchContentDocumentAndResolveDom(contentDocumentResolvedCallback, function(err) {
+      _handleError(err);
+      errorCallback(err);
+    });
+  };
 
-    this.getFileContentsFromPackage = function(filePathRelativeToPackageRoot, callback, onerror) {
+  this.getFileContentsFromPackage = function(filePathRelativeToPackageRoot, callback, onerror) {
 
-      _resourceFetcher.fetchFileContentsText(filePathRelativeToPackageRoot, function (fileContents) {
-        callback(fileContents);
-      }, onerror);
-    };
+    _resourceFetcher.fetchFileContentsText(filePathRelativeToPackageRoot, function(fileContents) {
+      callback(fileContents);
+    }, onerror);
+  };
 
 
 
-    this.getXmlFileDom = function (xmlFilePathRelativeToPackageRoot, callback, onerror) {
-      self.getFileContentsFromPackage(xmlFilePathRelativeToPackageRoot, function (xmlFileContents) {
-        var fileDom = self.markupParser.parseXml(xmlFileContents);
-        callback(fileDom);
-      }, onerror);
-    };
+  this.getXmlFileDom = function(xmlFilePathRelativeToPackageRoot, callback, onerror) {
+    self.getFileContentsFromPackage(xmlFilePathRelativeToPackageRoot, function(xmlFileContents) {
+      var fileDom = self.markupParser.parseXml(xmlFileContents);
+      callback(fileDom);
+    }, onerror);
+  };
 
-    this.getPackageFullPath = function(callback, onerror) {
-      self.getXmlFileDom('META-INF/container.xml', function (containerXmlDom) {
-        var packageFullPath = self.getRootFile(containerXmlDom);
-        callback(packageFullPath);
-      }, onerror);
-    };
+  this.getPackageFullPath = function(callback, onerror) {
+    self.getXmlFileDom('META-INF/container.xml', function(containerXmlDom) {
+      var packageFullPath = self.getRootFile(containerXmlDom);
+      callback(packageFullPath);
+    }, onerror);
+  };
 
-    this.getRootFile = function(containerXmlDom) {
-      var rootFile = $('rootfile', containerXmlDom);
-      var packageFullPath = rootFile.attr('full-path');
-      return packageFullPath;
-    };
+  this.getRootFile = function(containerXmlDom) {
+    var rootFile = $('rootfile', containerXmlDom);
+    var packageFullPath = rootFile.attr('full-path');
+    return packageFullPath;
+  };
 
-    this.getPackageDom = function (callback, onerror) {
-      if (_packageDom) {
-        callback(_packageDom);
+  this.getPackageDom = function(callback, onerror) {
+    if (_packageDom) {
+      callback(_packageDom);
+    } else {
+      // TODO: use jQuery's Deferred
+      // Register all callbacks interested in initialized packageDom, launch its instantiation only once
+      // and broadcast to all callbacks registered during the initialization once it's done:
+      if (_packageDomInitializationDeferred) {
+        _packageDomInitializationDeferred.done(callback);
       } else {
-        // TODO: use jQuery's Deferred
-        // Register all callbacks interested in initialized packageDom, launch its instantiation only once
-        // and broadcast to all callbacks registered during the initialization once it's done:
-        if (_packageDomInitializationDeferred) {
-          _packageDomInitializationDeferred.done(callback);
-        } else {
-          _packageDomInitializationDeferred = $.Deferred();
-          _packageDomInitializationDeferred.done(callback);
-          self.getPackageFullPath(function (packageFullPath) {
-            _packageFullPath = packageFullPath;
-            self.getXmlFileDom(packageFullPath, function (packageDom) {
-              _packageDom = packageDom;
-              _packageDomInitializationDeferred.resolve(packageDom);
-              _packageDomInitializationDeferred = undefined;
-            })
-          }, onerror);
-        }
+        _packageDomInitializationDeferred = $.Deferred();
+        _packageDomInitializationDeferred.done(callback);
+        self.getPackageFullPath(function(packageFullPath) {
+          _packageFullPath = packageFullPath;
+          self.getXmlFileDom(packageFullPath, function(packageDom) {
+            _packageDom = packageDom;
+            _packageDomInitializationDeferred.resolve(packageDom);
+            _packageDomInitializationDeferred = undefined;
+          })
+        }, onerror);
       }
-    };
-
-    this.convertPathRelativeToPackageToRelativeToBase = function (relativeToPackagePath) {
-      return new URI(relativeToPackagePath).absoluteTo(_packageFullPath).toString();
-    };
-
-    this.relativeToPackageFetchFileContents = function(relativeToPackagePath, fetchMode, fetchCallback, onerror) {
-
-      if (! onerror) {
-        onerror = _handleError;
-      }
-
-      var pathRelativeToEpubRoot = decodeURIComponent(self.convertPathRelativeToPackageToRelativeToBase(relativeToPackagePath));
-      // In case we received an absolute path, convert it to relative form or the fetch will fail:
-      if (pathRelativeToEpubRoot.charAt(0) === '/') {
-        pathRelativeToEpubRoot = pathRelativeToEpubRoot.substr(1);
-      }
-      var fetchFunction = _resourceFetcher.fetchFileContentsText;
-      if (fetchMode === 'blob') {
-        fetchFunction = _resourceFetcher.fetchFileContentsBlob;
-      } else if (fetchMode === 'data64uri') {
-        fetchFunction = _resourceFetcher.fetchFileContentsData64Uri;
-      }
-      fetchFunction.call(_resourceFetcher, pathRelativeToEpubRoot, fetchCallback, onerror);
-    };
-
-
-
-    this.getRelativeXmlFileDom = function (filePath, callback, errorCallback) {
-      self.getXmlFileDom(self.convertPathRelativeToPackageToRelativeToBase(filePath), callback, errorCallback);
-    };
-
-    function readEncriptionData(callback) {
-      self.getXmlFileDom('META-INF/encryption.xml', function (encryptionDom, error) {
-
-        if(error) {
-          console.log(error);
-          console.log("Document doesn't make use of encryption.");
-          _encryptionHandler = new EncryptionHandler(undefined);
-          callback();
-        }
-        else {
-
-          var encryptions = [];
-
-
-          var encryptedData = $('EncryptedData', encryptionDom);
-          encryptedData.each(function (index, encryptedData) {
-            var encryptionAlgorithm = $('EncryptionMethod', encryptedData).first().attr('Algorithm');
-
-            encryptions.push({algorithm: encryptionAlgorithm});
-
-            // For some reason, jQuery selector "" against XML DOM sometimes doesn't match properly
-            var cipherReference = $('CipherReference', encryptedData);
-            cipherReference.each(function (index, CipherReference) {
-              var cipherReferenceURI = $(CipherReference).attr('URI');
-              console.log('Encryption/obfuscation algorithm ' + encryptionAlgorithm + ' specified for ' +
-                          cipherReferenceURI);
-              encryptions[cipherReferenceURI] = encryptionAlgorithm;
-            });
-          });
-        }
-
-      });
-    }
-
-    // Currently needed for deobfuscating fonts
-    this.setPackageMetadata = function(packageMetadata, settingFinishedCallback) {
-
-      self.getXmlFileDom('META-INF/encryption.xml', function (encryptionDom) {
-
-        var encryptionData = EncryptionHandler.CreateEncryptionData(packageMetadata.id, encryptionDom);
-
-        _encryptionHandler = new EncryptionHandler(encryptionData);
-
-        if (_encryptionHandler.isEncryptionSpecified()) {
-          // EPUBs that use encryption for any resources should be fetched in a programmatical manner:
-          _shouldConstructDomProgrammatically = true;
-        }
-
-        settingFinishedCallback();
-
-
-      }, function(error){
-
-        console.log("Document doesn't make use of encryption.");
-        _encryptionHandler = new EncryptionHandler(undefined);
-
-        settingFinishedCallback();
-      });
-    };
-
-    this.getDecryptionFunctionForRelativePath = function(pathRelativeToRoot) {
-      return _encryptionHandler.getDecryptionFunctionForRelativePath(pathRelativeToRoot);
     }
   };
 
-  module.exports = PublicationFetcher;
+  this.convertPathRelativeToPackageToRelativeToBase = function(relativeToPackagePath) {
+    return new URI(relativeToPackagePath).absoluteTo(_packageFullPath).toString();
+  };
+
+  this.relativeToPackageFetchFileContents = function(relativeToPackagePath, fetchMode, fetchCallback, onerror) {
+
+    if (!onerror) {
+      onerror = _handleError;
+    }
+
+    var pathRelativeToEpubRoot = decodeURIComponent(self.convertPathRelativeToPackageToRelativeToBase(relativeToPackagePath));
+    // In case we received an absolute path, convert it to relative form or the fetch will fail:
+    if (pathRelativeToEpubRoot.charAt(0) === '/') {
+      pathRelativeToEpubRoot = pathRelativeToEpubRoot.substr(1);
+    }
+    var fetchFunction = _resourceFetcher.fetchFileContentsText;
+    if (fetchMode === 'blob') {
+      fetchFunction = _resourceFetcher.fetchFileContentsBlob;
+    } else if (fetchMode === 'data64uri') {
+      fetchFunction = _resourceFetcher.fetchFileContentsData64Uri;
+    }
+    fetchFunction.call(_resourceFetcher, pathRelativeToEpubRoot, fetchCallback, onerror);
+  };
+
+
+
+  this.getRelativeXmlFileDom = function(filePath, callback, errorCallback) {
+    self.getXmlFileDom(self.convertPathRelativeToPackageToRelativeToBase(filePath), callback, errorCallback);
+  };
+
+  function readEncriptionData(callback) {
+    self.getXmlFileDom('META-INF/encryption.xml', function(encryptionDom, error) {
+
+      if (error) {
+        console.log(error);
+        console.log("Document doesn't make use of encryption.");
+        _encryptionHandler = new EncryptionHandler(undefined);
+        callback();
+      } else {
+
+        var encryptions = [];
+
+
+        var encryptedData = $('EncryptedData', encryptionDom);
+        encryptedData.each(function(index, encryptedData) {
+          var encryptionAlgorithm = $('EncryptionMethod', encryptedData).first().attr('Algorithm');
+
+          encryptions.push({
+            algorithm: encryptionAlgorithm
+          });
+
+          // For some reason, jQuery selector "" against XML DOM sometimes doesn't match properly
+          var cipherReference = $('CipherReference', encryptedData);
+          cipherReference.each(function(index, CipherReference) {
+            var cipherReferenceURI = $(CipherReference).attr('URI');
+            console.log('Encryption/obfuscation algorithm ' + encryptionAlgorithm + ' specified for ' +
+              cipherReferenceURI);
+            encryptions[cipherReferenceURI] = encryptionAlgorithm;
+          });
+        });
+      }
+
+    });
+  }
+
+  // Currently needed for deobfuscating fonts
+  this.setPackageMetadata = function(packageMetadata, settingFinishedCallback) {
+
+    self.getXmlFileDom('META-INF/encryption.xml', function(encryptionDom) {
+
+      var encryptionData = EncryptionHandler.CreateEncryptionData(packageMetadata.id, encryptionDom);
+
+      _encryptionHandler = new EncryptionHandler(encryptionData);
+
+      if (_encryptionHandler.isEncryptionSpecified()) {
+        // EPUBs that use encryption for any resources should be fetched in a programmatical manner:
+        _shouldConstructDomProgrammatically = true;
+      }
+
+      settingFinishedCallback();
+
+
+    }, function(error) {
+
+      console.log("Document doesn't make use of encryption.");
+      _encryptionHandler = new EncryptionHandler(undefined);
+
+      settingFinishedCallback();
+    });
+  };
+
+  this.getDecryptionFunctionForRelativePath = function(pathRelativeToRoot) {
+    return _encryptionHandler.getDecryptionFunctionForRelativePath(pathRelativeToRoot);
+  }
+};
+
+module.exports = PublicationFetcher;

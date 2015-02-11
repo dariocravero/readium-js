@@ -1,6 +1,6 @@
-var $         = require('jquery')
-var _         = require('underscore')
-var Backbone  = require('backbone')
+var $ = require('jquery')
+var _ = require('underscore')
+var Backbone = require('backbone')
 
 
 // Rationale: An image annotation does NOT have a view, as we don't know the state of an image element within an EPUB; it's entirely
@@ -12,50 +12,50 @@ var Backbone  = require('backbone')
 
 var ImageAnnotation = Backbone.Model.extend({
 
-    initialize : function (attributes, options) {
+  initialize: function(attributes, options) {
 
-        // Set handlers here. Can use jquery handlers
-        var that = this;
-        var $imageElement = $(this.get("imageNode"));
-        $imageElement.on("mouseenter", function () {
-            that.setMouseenterBorder();
-        });
-        $imageElement.on("mouseleave", function () {
-            that.setMouseleaveBorder();
-        });
-        $imageElement.on("click", function () {
-            that.get("bbPageSetView").trigger("annotationClicked", "image", that.get("CFI"), that.get("id"),event);
-        });
-    },
+    // Set handlers here. Can use jquery handlers
+    var that = this;
+    var $imageElement = $(this.get("imageNode"));
+    $imageElement.on("mouseenter", function() {
+      that.setMouseenterBorder();
+    });
+    $imageElement.on("mouseleave", function() {
+      that.setMouseleaveBorder();
+    });
+    $imageElement.on("click", function() {
+      that.get("bbPageSetView").trigger("annotationClicked", "image", that.get("CFI"), that.get("id"), event);
+    });
+  },
 
-    render : function () {
+  render: function() {
 
-        this.setCSS();
-    },
+    this.setCSS();
+  },
 
-    setCSS : function () {
-        
-        $(this.get("imageNode")).css({
-            "border" : "5px solid rgb(255, 0, 0)",
-            "border" : "5px solid rgba(255, 0, 0, 0.2)",
-            "-webkit-background-clip" : "padding-box",
-            "background-clip" : "padding-box"
-        });
-    },
+  setCSS: function() {
 
-    setMouseenterBorder : function () {
+    $(this.get("imageNode")).css({
+      "border": "5px solid rgb(255, 0, 0)",
+      "border": "5px solid rgba(255, 0, 0, 0.2)",
+      "-webkit-background-clip": "padding-box",
+      "background-clip": "padding-box"
+    });
+  },
 
-        $(this.get("imageNode")).css({
-            "border" : "5px solid rgba(255, 0, 0, 0.4)"
-        });
-    },
+  setMouseenterBorder: function() {
 
-    setMouseleaveBorder : function () {
+    $(this.get("imageNode")).css({
+      "border": "5px solid rgba(255, 0, 0, 0.4)"
+    });
+  },
 
-        $(this.get("imageNode")).css({
-            "border" : "5px solid rgba(255, 0, 0, 0.2)"
-        });
-    }
+  setMouseleaveBorder: function() {
+
+    $(this.get("imageNode")).css({
+      "border": "5px solid rgba(255, 0, 0, 0.2)"
+    });
+  }
 });
 
 module.exports = ImageAnnotation

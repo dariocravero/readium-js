@@ -34,85 +34,83 @@ var SpineItemConstants = require('./spine-item-constants')
  * @constructor
  */
 
-var Package = function(packageData){
+var Package = function(packageData) {
 
-    var self = this;
+  var self = this;
 
-    this.spine = undefined;
-    
-    this.rootUrl = undefined;
-    this.rootUrlMO = undefined;
-    
-    this.media_overlay = undefined;
-    
-    this.rendition_viewport = undefined;
-    
-    this.rendition_flow = undefined;
-    
-    this.rendition_layout = undefined;
+  this.spine = undefined;
 
-    //TODO: unused yet!
-    this.rendition_spread = undefined;
+  this.rootUrl = undefined;
+  this.rootUrlMO = undefined;
 
-    //TODO: unused yet!
-    this.rendition_orientation = undefined;
+  this.media_overlay = undefined;
 
-    this.resolveRelativeUrlMO = function(relativeUrl) {
+  this.rendition_viewport = undefined;
 
-        if(self.rootUrlMO && self.rootUrlMO.length > 0) {
+  this.rendition_flow = undefined;
 
-            if(Helpers.EndsWith(self.rootUrlMO, "/")){
-                return self.rootUrlMO + relativeUrl;
-            }
-            else {
-                return self.rootUrlMO + "/" + relativeUrl;
-            }
-        }
+  this.rendition_layout = undefined;
 
-        return self.resolveRelativeUrl(relativeUrl);
-    };
+  //TODO: unused yet!
+  this.rendition_spread = undefined;
 
-    this.resolveRelativeUrl = function(relativeUrl) {
+  //TODO: unused yet!
+  this.rendition_orientation = undefined;
 
-        if(self.rootUrl) {
+  this.resolveRelativeUrlMO = function(relativeUrl) {
 
-            if(Helpers.EndsWith(self.rootUrl, "/")){
-                return self.rootUrl + relativeUrl;
-            }
-            else {
-                return self.rootUrl + "/" + relativeUrl;
-            }
-        }
+    if (self.rootUrlMO && self.rootUrlMO.length > 0) {
 
-        return relativeUrl;
-    };
-
-    this.isFixedLayout = function() {
-        return self.rendition_layout === SpineItemConstants.RENDITION_LAYOUT_PREPAGINATED;
-    };
-
-    this.isReflowable = function() {
-        return !self.isFixedLayout();
-    };
-    
-
-    if(packageData) {
-        
-        this.rootUrl = packageData.rootUrl;
-        this.rootUrlMO = packageData.rootUrlMO;
-
-        this.rendition_viewport = packageData.rendition_viewport;
-
-        this.rendition_layout = packageData.rendition_layout;
-
-        this.rendition_flow = packageData.rendition_flow;
-        this.rendition_orientation = packageData.rendition_orientation;
-        this.rendition_spread = packageData.rendition_spread;
-        
-        this.spine = new Spine(this, packageData.spine);
-
-        this.media_overlay = MediaOverlay.fromDTO(packageData.media_overlay, this);
+      if (Helpers.EndsWith(self.rootUrlMO, "/")) {
+        return self.rootUrlMO + relativeUrl;
+      } else {
+        return self.rootUrlMO + "/" + relativeUrl;
+      }
     }
+
+    return self.resolveRelativeUrl(relativeUrl);
+  };
+
+  this.resolveRelativeUrl = function(relativeUrl) {
+
+    if (self.rootUrl) {
+
+      if (Helpers.EndsWith(self.rootUrl, "/")) {
+        return self.rootUrl + relativeUrl;
+      } else {
+        return self.rootUrl + "/" + relativeUrl;
+      }
+    }
+
+    return relativeUrl;
+  };
+
+  this.isFixedLayout = function() {
+    return self.rendition_layout === SpineItemConstants.RENDITION_LAYOUT_PREPAGINATED;
+  };
+
+  this.isReflowable = function() {
+    return !self.isFixedLayout();
+  };
+
+
+  if (packageData) {
+
+    this.rootUrl = packageData.rootUrl;
+    this.rootUrlMO = packageData.rootUrlMO;
+
+    this.rendition_viewport = packageData.rendition_viewport;
+
+    this.rendition_layout = packageData.rendition_layout;
+
+    this.rendition_flow = packageData.rendition_flow;
+    this.rendition_orientation = packageData.rendition_orientation;
+    this.rendition_spread = packageData.rendition_spread;
+
+    this.spine = new Spine(this, packageData.spine);
+
+    this.media_overlay = MediaOverlay.fromDTO(packageData.media_overlay, this);
+  }
 };
 
 module.exports = Package

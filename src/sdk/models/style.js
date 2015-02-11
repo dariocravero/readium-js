@@ -31,18 +31,18 @@
  */
 var Style = function(selector, declarations) {
 
-    this.selector = selector;
-    this.declarations = declarations;
+  this.selector = selector;
+  this.declarations = declarations;
 
-    this.setDeclarations = function(declarations) {
+  this.setDeclarations = function(declarations) {
 
-        for(var prop in declarations) {
-            if(declarations.hasOwnProperty(prop)) {
-                this.declarations[prop] = declarations[prop];
-            }
-        }
-
+    for (var prop in declarations) {
+      if (declarations.hasOwnProperty(prop)) {
+        this.declarations[prop] = declarations[prop];
+      }
     }
+
+  }
 };
 
 module.exports = Style
