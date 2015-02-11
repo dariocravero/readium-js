@@ -1,0 +1,6 @@
+[submodule "lib/readium-shared-js"]
+	path = lib/readium-shared-js
+	url = https://github.com/readium/readium-shared-js.git
+[submodule "lib/readium-js"]
+	path = lib/readium-js
+	url = https://github.com/readium/readium-js.git
