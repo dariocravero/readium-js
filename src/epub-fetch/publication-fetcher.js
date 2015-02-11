@@ -11,14 +11,17 @@
 //  used to endorse or promote products derived from this software without specific 
 //  prior written permission.
 
-var $ = require('jquery');
+var $ = require('zepto');
 var ContentDocumentFetcher = require('./content-document-fetcher');
+var Deferred = require('simply-deferred');
 var EncryptionHandler = require('./encryption-handler');
 var MarkupParser = require('./markup-parser');
 var PlainResourceFetcher = require('./plain-resource-fetcher');
 var ResourceCache = require('./resource-cache');
 var URI = require('URIjs');
 var ZipResourceFetcher = require('./zip-resource-fetcher');
+
+Deferred.installInto($);
 
 function PublicationFetcher(bookRoot, jsLibRoot) {
 

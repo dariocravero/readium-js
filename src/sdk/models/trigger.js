@@ -25,7 +25,7 @@
 //  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
 //  OF THE POSSIBILITY OF SUCH DAMAGE.
 
-var $ = require('jquery')
+var $ = require('zepto')
 var escapeJQuerySelector = require('../helpers/escape-jquery-selector')
 var Trigger = require('./trigger')
 

@@ -11,10 +11,13 @@
 //  used to endorse or promote products derived from this software without specific 
 //  prior written permission.
 
-var $ = require('jquery');
+var $ = require('zepto');
 var _ = require('underscore');
+var Deferred = require('simply-deferred');
 var URI = require('URIjs');
 var ContentTypeDiscovery = require('./discover-content-type');
+
+Deferred.installInto($);
 
 function ContentDocumentFetcher(publicationFetcher, spineItem, loadedDocumentUri, publicationResourcesCache) {
 

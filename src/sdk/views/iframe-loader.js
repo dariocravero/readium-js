@@ -1,4 +1,4 @@
-var $ = require('jquery')
+var $ = require('zepto')
 var _ = require('underscore')
 var URI = require('URIjs')
 

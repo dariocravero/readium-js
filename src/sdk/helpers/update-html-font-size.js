@@ -1,4 +1,4 @@
-var $ = require('jquery')
+var $ = require('zepto')
 require('../../../lib/jquery-sizes')
 
 function UpdateHtmlFontSize($epubHtml, fontSize) {

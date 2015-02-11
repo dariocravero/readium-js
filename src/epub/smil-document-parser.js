@@ -11,8 +11,11 @@
 //  used to endorse or promote products derived from this software without specific 
 //  prior written permission.
 
-var $ = require('jquery')
+var $ = require('zepto')
 var _ = require('underscore')
+var Deferred = require('simply-deferred');
+
+Deferred.installInto($);
 
 // `SmilDocumentParser` is used to parse the xml of an epub package
 // document and build a javascript object. The constructor accepts an

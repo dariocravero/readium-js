@@ -24,12 +24,13 @@
 //  OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var _ = require('underscore')
-var $ = require('jquery')
+var $ = require('zepto')
 var Backbone = require('backbone')
 var BookmarkData = require('../models/bookmark-data')
 var CurrentPagesInfo = require('../models/current-pages-info')
 var CSSTransition = require('../helpers/css-transition')
 var deduceSyntheticSpread = require('../helpers/deduce-synthetic-spread')
+var Deferred = require('simply-deferred');
 var Events = require('../events')
 var InternalEvents = require('../internal-events')
 var loadTemplate = require('../helpers/load-template')
@@ -38,6 +39,8 @@ var OnePageView = require('./one-page-view')
 var PageOpenRequest = require('../models/page-open-request')
 var setStyles = require('../helpers/set-styles')
 var Spread = require('../models/spread')
+
+Deferred.installInto($);
 
 /**
  * View for rendering fixed layout page spread

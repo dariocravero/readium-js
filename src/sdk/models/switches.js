@@ -25,7 +25,7 @@
 //  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
 //  OF THE POSSIBILITY OF SUCH DAMAGE.
 
-var $ = require('jquery')
+var $ = require('zepto')
 
 // Description: Parse the epub "switch" tags and hide
 // cases that are not supported

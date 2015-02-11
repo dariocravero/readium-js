@@ -1,0 +1,20 @@
+{
+  "name": "zepto",
+  "version": "0.0.1",
+  "description": "zepto-npm-hmh",
+  "main": "index.js",
+  "readme": "README.md",
+  "keywords": [
+    "zepto",
+    "hmh"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "TODO"
+  },
+  "author": {
+    "name": "Darío Javier Cravero",
+    "email": "dario.cravero@hmhco.com"
+  },
+  "license": "MIT"
+}

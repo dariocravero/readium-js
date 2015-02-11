@@ -25,7 +25,7 @@
 //  OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var _ = require('underscore')
-var $ = require('jquery')
+var $ = require('zepto')
 var Backbone = require('backbone')
 var BookmarkData = require('../models/bookmark-data')
 var CurrentPagesInfo = require('../models/current-pages-info')
