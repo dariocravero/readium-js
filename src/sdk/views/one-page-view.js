@@ -23,7 +23,7 @@
 //  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
 //  OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
+var $ = require('jquery');
 var _ = require('underscore')
 var Backbone = require('backbone')
 var CfiNavigationLogic = require('./cfi-navigation-logic')
@@ -760,7 +760,7 @@ function OnePageView(options, classes, enableBookStyleOverrides, reader) {
             callback(success, _$iframe, _currentSpineItem, true, context);
           };
 
-          if (isIframeAlive(_$iframe[0])) {
+          if (isIFrameAlive(_$iframe[0])) {
             onIFrameLoad(success); // applies styles
 
             func();

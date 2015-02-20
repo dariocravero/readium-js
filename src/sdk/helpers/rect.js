@@ -6,6 +6,10 @@
  * @param height
  * @constructor
  */
+
+var _ = require('underscore');
+var jQuery = require('jquery');
+
 function Rect(left, top, width, height) {
 
   this.left = left;

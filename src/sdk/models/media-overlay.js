@@ -31,6 +31,9 @@
  * @param package
  * @constructor
  */
+
+var SmilModel = require('./smil-model')
+
 var MediaOverlay = function(package) {
 
   this.package = package;
