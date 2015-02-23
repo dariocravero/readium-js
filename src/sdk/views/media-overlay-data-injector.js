@@ -24,6 +24,9 @@
 
 var $ = require('jquery')
 var EPUBcfi = require('epub-cfi')
+var SmilIterator = require('../models/smil-iterator');
+var ResolveContentRef = require('../helpers/resolve-content-ref')
+
 
 /**
  *
@@ -276,7 +279,7 @@ function MediaOverlayDataInjector(mediaOverlay, mediaOverlayPlayer) {
           // }
 
           if (file && fragmentId) {
-            var textRelativeRef = ReadiumSDK.Helpers.ResolveContentRef(file, smil.href);
+            var textRelativeRef = ResolveContentRef(file, smil.href);
             var same = textRelativeRef === spineItem.href;
             if (same) {
               root.element = $iframe[0].contentDocument.getElementById(fragmentId);
@@ -307,7 +310,7 @@ function MediaOverlayDataInjector(mediaOverlay, mediaOverlayPlayer) {
 
     //console.debug("[[MO ATTACH]] " + spineItem.idref + " /// " + spineItem.media_overlay_id + " === " + smil.id);
 
-    var iter = new ReadiumSDK.Models.SmilIterator(smil);
+    var iter = new SmilIterator(smil);
 
     var fakeOpfRoot = "/99!";
     var epubCfiPrefix = "epubcfi";
@@ -318,7 +321,7 @@ function MediaOverlayDataInjector(mediaOverlay, mediaOverlayPlayer) {
 
       if (true) { //iter.currentPar.text.srcFragmentId (includes empty frag ID)
 
-        var textRelativeRef = ReadiumSDK.Helpers.ResolveContentRef(iter.currentPar.text.srcFile, iter.smil.href);
+        var textRelativeRef = ResolveContentRef(iter.currentPar.text.srcFile, iter.smil.href);
 
         var same = textRelativeRef === spineItem.href;
         if (same) {
