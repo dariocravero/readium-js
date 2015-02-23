@@ -18,21 +18,39 @@ var reader = new Readium.Reader({
 //    el: '#id', /* DOM selector */
 //  }
 
-reader.openPackageDocument('demo-book', function onOpenPackageDocument(packageDocument, options) {
-  console.log('openPackageDocument', packageDocument, options)
+var URI = require('URIjs');
 
-  packageDocument.generateTocListDOM(function(html) {
-    window.packageDocumentHtml = html;
-    document.getElementById('toc').innerHTML = html.documentElement.querySelector('body').innerHTML;
-  })
+reader.openPackageDocument('demo-book', function onOpenPackageDocument(packageDocument, options) {
+  packageDocument.getTocDom(function(html) {
+    var toc = document.getElementById('toc');
+
+    // Get a proper TOC object through EPUBJS' parser.
+    // console.log('toc', parser.nav(html, {}, {}));
+
+    toc.innerHTML = html.documentElement.querySelector('body').innerHTML;
+
+    toc.addEventListener('click', function(event) {
+      if (event.target.tagName === 'A') {
+        event.preventDefault();
+        var uri = URI(event.target.href).path().replace(/^\//, '');
+          reader.reader.openContentUrl(uri);
+      }
+    }, true);
+  });
+
+  document.getElementById('left-page').addEventListener('click', function(event) {
+    reader.reader.openPageLeft();
+  }, false);
+  document.getElementById('right-page').addEventListener('click', function(event) {
+    reader.reader.openPageRight();
+  }, false);
 
   if (process.env.node_env !== 'production') {
     window.readiumPackageDocument = packageDocument;
     window.readiumOptions = options;
   }
-})
+});
 
 if (process.env.node_env !== 'production') {
-  window.Readium = Readium
   window.readiumReader = reader;
 }
