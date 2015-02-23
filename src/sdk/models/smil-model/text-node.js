@@ -1,5 +1,5 @@
 var MediaNode = require('./media-node')
-var ResolveContentRef = require('../helpers/resolve-content-ref')
+var ResolveContentRef = require('../../helpers/resolve-content-ref')
 
 function TextNode(parent) {
 

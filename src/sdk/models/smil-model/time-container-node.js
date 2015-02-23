@@ -4,7 +4,7 @@ function TimeContainerNode(parent) {
 
   this.parent = parent;
 
-  this.children = undefined;
+  this.children = typeof this.children === 'undefined' ? [] : this.children;
   this.index = undefined;
 
   this.epubtype = "";

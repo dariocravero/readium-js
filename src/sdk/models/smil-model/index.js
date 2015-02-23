@@ -28,8 +28,10 @@
 
 var AudioNode = require('./audio-node')
 var TextNode = require('./text-node')
+var SeqNode = require('./seq-node')
+var ParNode = require('./par-node')
 
-function Smil() {
+function SmilModel() {
 
   this.parent = undefined;
 
@@ -307,4 +309,4 @@ SmilModel.fromSmilDTO = function(smilDTO, mo) {
 
 };
 
-module.exports = Smil
+module.exports = SmilModel
