@@ -20,12 +20,14 @@ var reader = new Readium.Reader({
 
 var URI = require('URIjs');
 
+var parser = new (require('../lib/epubjs/parser'));
+
 reader.openPackageDocument('demo-book', function onOpenPackageDocument(packageDocument, options) {
   packageDocument.getTocDom(function(html) {
     var toc = document.getElementById('toc');
 
     // Get a proper TOC object through EPUBJS' parser.
-    // console.log('toc', parser.nav(html, {}, {}));
+    console.log('toc', parser.nav(html, {}, {}));
 
     toc.innerHTML = html.documentElement.querySelector('body').innerHTML;
 
