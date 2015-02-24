@@ -221,13 +221,13 @@ var MediaOverlay = function(package) {
 MediaOverlay.fromDTO = function(moDTO, package) {
 
   var mo = new MediaOverlay(package);
-mo.DEBUG = true;
+
   if (!moDTO) {
     console.debug("No Media Overlay.");
     return mo;
   }
 
-  console.debug("Media Overlay INIT...", moDTO, package);
+  console.debug("Media Overlay INIT...");
 
   if (mo.DEBUG)
     console.debug(JSON.stringify(moDTO));
