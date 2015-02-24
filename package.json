@@ -26,7 +26,7 @@
     "build":      "NODE_ENV=production browserify src/app.js > ./dist/readium.js && uglifyjs ./dist/readium.js -cm > ./dist/readium.min.js",
     "livereload": "livereloadify ./public",
     "start": "npm run watch & npm run livereload & npm run static",
-    "static": "static ./public --port 3000",
+    "static": "static ./public --port 3000 --cache 0",
     "test": "jest",
     "watch": "watchify -o ./public/readium.js -v -d src/app.js"
   },
