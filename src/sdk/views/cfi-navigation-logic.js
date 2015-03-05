@@ -29,6 +29,7 @@
 var _ = require('underscore')
 var $ = require('jquery')
 var Rect = require('../helpers/rect')
+var EPUBcfi = require('epub-cfi')
 
 /**
  * CFI navigation helper class
@@ -548,7 +549,7 @@ function CfiNavigationLogic($viewport, $iframe, options) {
     }
 
     //noinspection JSUnresolvedVariable
-    var cfi = EPUBcfi.Generator.generateElementCFIComponent(foundElement.$element[0]);
+    var cfi = EPUBcfi.generateElementCFIComponent(foundElement.$element[0]);
 
     if (cfi[0] == "!") {
       cfi = cfi.substring(1);
