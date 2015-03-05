@@ -1,14 +1,14 @@
 {
   "name": "readium",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "readium",
   "main": "src/index.js",
   "readme": "README.md",
   "keywords": ["readium", "hmh"],
-  "repository": "TODO",
+  "repository": "https://github.com/dariocravero/readium-js",
   "dependencies": {
     "backbone": "^1.1.2",
-    "epub-cfi": "^0.0.1",
+    "epub-cfi": "^0.0.2",
     "jquery": "^2.1.3",
     "rangy": "^1.3.0-alpha.20140921",
     "underscore": "^1.7.0",
