@@ -29,7 +29,7 @@ var Backbone = require('backbone')
 var CfiNavigationLogic = require('./cfi-navigation-logic')
 var CSSTransition = require('../helpers/css-transition')
 var CSSTransformString = require('../helpers/css-transform-string')
-var isIFrameAlive = require('../helpers/is-iframe-alive')
+var isIframeAlive = require('../helpers/is-iframe-alive')
 var loadTemplate = require('../helpers/load-template')
 var setStyles = require('../helpers/set-styles')
 var UpdateHtmlFontSize = require('../helpers/update-html-font-size')
@@ -760,7 +760,7 @@ function OnePageView(options, classes, enableBookStyleOverrides, reader) {
             callback(success, _$iframe, _currentSpineItem, true, context);
           };
 
-          if (isIFrameAlive(_$iframe[0])) {
+          if (isIframeAlive(_$iframe[0])) {
             onIFrameLoad(success); // applies styles
 
             func();
