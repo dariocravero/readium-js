@@ -31,7 +31,7 @@ var AudioPlayer = require('./audio-player')
 var Events = require('../events')
 var MediaOverlayElementHighlighter = require('./media-overlay-element-highlighter')
 var ResolveContentRef = require('../helpers/resolve-content-ref')
-var ScrollView = require('./scroll-view')
+var ScrollView = require('./simple-scroll-view')
 var SmilIterator = require('../models/smil-iterator')
 
 /**

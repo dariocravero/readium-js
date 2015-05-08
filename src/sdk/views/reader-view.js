@@ -51,6 +51,7 @@ var PageOpenRequest = require('../models/page-open-request')
 var ReflowableView = require('./reflowable-view')
 var ResolveContentRef = require('../helpers/resolve-content-ref')
 var ScrollView = require('./scroll-view')
+var SimpleScrollView = require('./simple-scroll-view')
 var setStyles = require('../helpers/set-styles')
 var StyleCollection = require('../collections/style')
 var Switches = require('../models/switches')
@@ -63,11 +64,13 @@ var ViewerSettings = require('../models/viewer-settings')
  * @property {number} VIEW_TYPE_COLUMNIZED          Reflowable document view
  * @property {number} VIEW_TYPE_FIXED               Fixed layout document view
  * @property {number} VIEW_TYPE_SCROLLED_DOC        Scrollable document view
+ * @property {number} VIEW_TYPE_SIMPLE_SCROLLED_DOC Simplified Scrollable document view
  * @property {number} VIEW_TYPE_SCROLLED_CONTINUOUS Continuous scrollable document view
  */
 var VIEW_TYPE_COLUMNIZED = 1;
 var VIEW_TYPE_FIXED = 2;
 var VIEW_TYPE_SCROLLED_DOC = 3;
+var VIEW_TYPE_SIMPLE_SCROLLED_DOC = 5;
 var VIEW_TYPE_SCROLLED_CONTINUOUS = 4;
 
 
@@ -154,6 +157,9 @@ function ReaderView(options) {
       case VIEW_TYPE_SCROLLED_CONTINUOUS:
         createdView = new ScrollView(options, true, self);
         break;
+      case VIEW_TYPE_SIMPLE_SCROLLED_DOC:
+        createdView = new SimpleScrollView(options, false, self);
+        break;
       default:
         createdView = new ReflowableView(options, self);
         break;
@@ -188,6 +194,11 @@ function ReaderView(options) {
       return VIEW_TYPE_SCROLLED_DOC;
     }
 
+    if (_currentView instanceof SimpleScrollView) {
+      return VIEW_TYPE_SIMPLE_SCROLLED_DOC;
+    }
+
+
     console.error("Unrecognized view type");
     return undefined;
   };
@@ -196,11 +207,15 @@ function ReaderView(options) {
   function deduceDesiredViewType(spineItem) {
 
     //check settings
-    if (_viewerSettings.scroll == "scroll-doc") {
+    if (_viewerSettings.scroll === "scroll-doc") {
       return VIEW_TYPE_SCROLLED_DOC;
     }
 
-    if (_viewerSettings.scroll == "scroll-continuous") {
+    if (_viewerSettings.scroll === "simple-scroll-doc") {
+      return VIEW_TYPE_SIMPLE_SCROLLED_DOC;
+    }
+
+    if (_viewerSettings.scroll === "scroll-continuous") {
       return VIEW_TYPE_SCROLLED_CONTINUOUS;
     }
 
