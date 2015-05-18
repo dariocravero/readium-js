@@ -4,7 +4,7 @@ var Backbone = require('backbone');
 var ReadiumSDK = {
   Views: require('./views'),
   Events: require('./events'),
-  Parser: require('../../lib/epubjs/parser'),
+  parseToc: require('./parse-toc'),
   version: function() {
     return '0.8.0';
   }

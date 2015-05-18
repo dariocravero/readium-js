@@ -1,0 +1,7 @@
+# Change log
+
+## [0.2.0] - 2015-05-18
+
+### Added
+
+- `Readium.SDK#parseToc(xml, spine)` now links Readium spine items with ePubJS' TOC structure.
