@@ -1,5 +1,11 @@
 # Change log
 
+## [0.3.1] - 2015-05-19
+
+### Changed
+
+- Use `epub-cfi` from scoped package `@hmh/epub-cfi`.
+
 ## [0.3.0] - 2015-05-19
 
 ### Changed

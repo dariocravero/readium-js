@@ -2,7 +2,7 @@ var $ = require('jquery')
 var _ = require('underscore')
 var Annotations = require('./annotations')
 var Backbone = require('backbone')
-var EPUBcfi = require('epub-cfi')
+var EPUBcfi = require('@hmh/epub-cfi');
 
 var ReflowableAnnotations = Backbone.Model.extend({
 
@@ -464,4 +464,4 @@ var ReflowableAnnotations = Backbone.Model.extend({
   }
 });
 
-module.exports = ReflowableAnnotations
+module.exports = ReflowableAnnotations;

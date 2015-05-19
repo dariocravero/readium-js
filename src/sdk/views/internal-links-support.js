@@ -23,7 +23,7 @@
 //  OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var $ = require('jquery')
-var Interpreter = require('epub-cfi').Interpreter
+var Interpreter = require('@hmh/epub-cfi').Interpreter;
 var URI = require('URIjs')
 
 /**
@@ -220,4 +220,4 @@ function InternalLinksSupport(reader) {
 
 }
 
-module.exports = InternalLinksSupport
+module.exports = InternalLinksSupport;

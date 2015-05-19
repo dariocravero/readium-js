@@ -29,7 +29,7 @@
 var _ = require('underscore')
 var $ = require('jquery')
 var Rect = require('../helpers/rect')
-var EPUBcfi = require('epub-cfi')
+var EPUBcfi = require('@hmh/epub-cfi');
 
 /**
  * CFI navigation helper class
@@ -865,4 +865,4 @@ function CfiNavigationLogic($viewport, $iframe, options) {
 
 };
 
-module.exports = CfiNavigationLogic
+module.exports = CfiNavigationLogic;

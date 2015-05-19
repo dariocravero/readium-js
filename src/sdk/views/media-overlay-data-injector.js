@@ -23,7 +23,7 @@
 //  OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var $ = require('jquery')
-var EPUBcfi = require('epub-cfi')
+var EPUBcfi = require('@hmh/epub-cfi');
 var SmilIterator = require('../models/smil-iterator');
 var ResolveContentRef = require('../helpers/resolve-content-ref')
 
@@ -475,4 +475,4 @@ function MediaOverlayDataInjector(mediaOverlay, mediaOverlayPlayer) {
   }
 };
 
-module.exports = MediaOverlayDataInjector
+module.exports = MediaOverlayDataInjector;
