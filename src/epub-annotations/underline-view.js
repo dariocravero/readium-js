@@ -1,5 +1,7 @@
-var Backbone = require('backbone')
-var Underline = require('./underline')
+var $ = require('jquery');
+var Backbone = require('backbone');
+var Underline = require('./underline');
+Backbone.$ = $;
 
 var UnderlineView = Backbone.View.extend({
 

@@ -1,5 +1,7 @@
-var Backbone = require('backbone')
-var Bookmark = require('./bookmark')
+var $ = require('jquery');
+var Backbone = require('backbone');
+var Bookmark = require('./bookmark');
+Backbone.$ = $;
 
 var BookmarkView = Backbone.View.extend({
 
@@ -106,4 +108,4 @@ var BookmarkView = Backbone.View.extend({
   }
 });
 
-module.exports = BookmarkView
+module.exports = BookmarkView;

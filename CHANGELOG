@@ -1,5 +1,12 @@
 # Change log
 
+## [0.3.0] - 2015-05-19
+
+### Changed
+
+- Added `$` to `Backbone.$` whenever `Backbone.View` is used as the npm version of `Backbone`
+  doesn't require jQuery on its own.
+
 ## [0.2.0] - 2015-05-18
 
 ### Added

@@ -1,5 +1,7 @@
-var Backbone = require('Backbone')
-var Highlight = require('./highlight')
+var $ = require('jquery');
+var Backbone = require('backbone');
+var Highlight = require('./highlight');
+Backbone.$ = $;
 
 var HighlightView = Backbone.View.extend({
 
@@ -85,4 +87,4 @@ var HighlightView = Backbone.View.extend({
   }
 });
 
-module.exports = HighlightView
+module.exports = HighlightView;
