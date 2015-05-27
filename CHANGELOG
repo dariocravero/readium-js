@@ -1,5 +1,9 @@
 # Change log
 
+## [0.3.2] - 2015-05-27
+
+- Fixed audio to work with scroll on our custom scrollview
+
 ## [0.3.1] - 2015-05-19
 
 ### Changed

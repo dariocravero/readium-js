@@ -31,7 +31,8 @@ var AudioPlayer = require('./audio-player')
 var Events = require('../events')
 var MediaOverlayElementHighlighter = require('./media-overlay-element-highlighter')
 var ResolveContentRef = require('../helpers/resolve-content-ref')
-var ScrollView = require('./simple-scroll-view')
+var ScrollView = require('./scroll-view')
+var SimpleScrollView = require('./simple-scroll-view')
 var SmilIterator = require('../models/smil-iterator')
 
 /**
@@ -1535,6 +1536,7 @@ console.debug("textAbsoluteRef: " + textAbsoluteRef);
     } else if (_currentTTS) {
       speakStart(undefined);
     } else {
+      console.log('MOplay')
       if (!_audioPlayer.play()) {
         console.log("Audio player was dead, reactivating...");
 
@@ -1716,7 +1718,10 @@ console.debug("textAbsoluteRef: " + textAbsoluteRef);
     var playingPar = undefined;
     var wasPlaying = self.isPlaying();
     if (wasPlaying && _smilIterator) {
-      var isScrollView = paginationData.initiator && paginationData.initiator instanceof ScrollView;
+      var isScrollView = paginationData.initiator && (
+        paginationData.initiator instanceof ScrollView ||
+          paginationData.initiator instanceof SimpleScrollView
+      );
       if (isScrollView && _settings.mediaOverlaysPreservePlaybackWhenScroll) {
         _wasPlayingScrolling = true;
         return;

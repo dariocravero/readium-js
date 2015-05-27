@@ -268,9 +268,6 @@ function SimpleScrollView(options, isContinuousScroll, reader) {
   }
 
   function scrollTo(offset, pageRequest) {
-
-    console.log('scrollTo.offset', offset, 'pageRequest', pageRequest);
-
     if (!_$contentFrameIframe) return;
 
     _$contentFrameIframe[0].body.scrollTop = offset;
@@ -912,7 +909,6 @@ function SimpleScrollView(options, isContinuousScroll, reader) {
     }
 
     if (scrollTop() != topOffset) {
-
       _isSettingScrollPosition = true;
       scrollTo(topOffset, pageRequest);
 
@@ -1027,7 +1023,7 @@ function SimpleScrollView(options, isContinuousScroll, reader) {
       bottom: 0
     };
 
-    range.top = pageView.element().position().top;
+    range.top = pageView.element()[0].contentDocument.body.scrollTop;
     range.bottom = range.top + pageView.getCalculatedPageHeight();
 
     return range;
@@ -1165,22 +1161,11 @@ function SimpleScrollView(options, isContinuousScroll, reader) {
   };
 
   this.getFirstVisibleMediaOverlayElement = function() {
-    var viewPortRange = getVisibleRange();
-
     var moElement = undefined;
-    var normalizedRange = {
-      top: 0,
-      bottom: 0
-    };
-    var pageViewRange;
-
     var steppedToVisiblePage = false;
 
     forEachItemView(function(pageView) {
-      pageViewRange = getPageViewRange(pageView);
-
-      normalizedRange.top = Math.max(pageViewRange.top, viewPortRange.top) - pageViewRange.top;
-      normalizedRange.bottom = Math.min(pageViewRange.bottom, viewPortRange.bottom) - pageViewRange.top;
+      var normalizedRange = getPageViewRange(pageView);
 
       if (rangeLength(normalizedRange) > 0) {
         steppedToVisiblePage = true;
@@ -1296,7 +1281,7 @@ function SimpleScrollView(options, isContinuousScroll, reader) {
       top: 0,
       bottom: 0
     };
-    elementRange.top = $element.offset().top + pageRange.top;
+    elementRange.top = $element.offset().top; // + pageRange.top;
     elementRange.bottom = elementRange.top + $element.height();
 
     return elementRange;
@@ -1323,6 +1308,8 @@ function SimpleScrollView(options, isContinuousScroll, reader) {
     var $element = $(element);
 
     var elementRange = getElementRange(pageView, $element);
+
+    console.log('elementRange', elementRange)
 
     if (!isRangeIsVisibleOnScreen(elementRange, 60)) {
 
