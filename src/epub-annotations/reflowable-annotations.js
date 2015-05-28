@@ -4,6 +4,11 @@ var Annotations = require('./annotations')
 var Backbone = require('backbone')
 var EPUBcfi = require('@hmh/epub-cfi');
 
+//Added Rangy
+var rangy = require('rangy');
+require('rangy/lib/rangy-classapplier.js');
+require('rangy/lib/rangy-serializer.js');
+
 var ReflowableAnnotations = Backbone.Model.extend({
 
   initialize: function(attributes, options) {
@@ -16,27 +21,78 @@ var ReflowableAnnotations = Backbone.Model.extend({
       scale: 0,
       bbPageSetView: this.get("bbPageSetView")
     });
-    // inject annotation CSS into iframe 
-
-
+    
+    // inject annotation CSS into iframe
     var annotationCSSUrl = this.get("annotationCSSUrl");
     if (annotationCSSUrl) {
       this.injectAnnotationCSS(annotationCSSUrl);
     }
 
+     //Added Rangy
+    this.rangy = rangy;
+    this.rangy.init();
+
     // emit an event when user selects some text.
     var epubWindow = $(this.get("contentDocumentDOM"));
     var self = this;
-    epubWindow.on("mouseup", function(event) {
-      var range = self.getCurrentSelectionRange();
+    epubWindow.on("mouseup", function () {
+
+      //var range = self.getCurrentSelectionRange();
+
+      var range = rangy.getNativeSelection();
+
       if (range === undefined) {
+
         return;
+
+      }else{
+
+        if (range.startOffset - range.endOffset) {
+        //self.annotations.get("bbPageSetView").trigger("textSelectionEvent", event);
+
+        //Added Rangy highlighting
+        var CFI = self.getCurrentSelectionCFI();
+        var ePubIframe = self.get("contentDocumentDOM");
+
+        var highlight = rangy.createClassApplier("hmh-highlight-red", {
+           elementTagName: "span",
+           elementAttributes: {
+                "data-cfi": CFI,
+                //this will be reset from an RCE response containing annotation_id to the highlight being saved
+                "data-highlight-id": "temp"
+           },
+           elementProperties: {
+                onclick: function() {
+                    //var highlightId = this.getAttributeNode('data-highlight-id').value;
+                    //need to emit event to open RCE tray
+                    return false;
+                }
+           }
+        });
+        try {
+          highlight.applyToSelection(ePubIframe);
+          self.dispatchHighlight(rangy.serializeSelection(ePubIframe), rangy.getSelection(ePubIframe).getRangeAt(0));
+        }
+        catch(err) {
+            //oops
+        }
+
       }
-      if (range.startOffset - range.endOffset) {
-        self.annotations.get("bbPageSetView").trigger("textSelectionEvent", event);
+
       }
     });
 
+
+  },
+
+  dispatchHighlight: function (serialized, text) {
+
+    //evet for RCE to listen for
+    //debugger;
+
+    //on response
+    // $('[data-highlight-id]').attr(annotation_id);
+    // $('[data-highlight-id]').addClass('annotation_' + annotation_id)
 
   },
 
