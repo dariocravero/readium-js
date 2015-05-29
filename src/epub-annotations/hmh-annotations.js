@@ -102,6 +102,8 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
             this.dispatchHighlight(rangy.serializeSelection(ePubIframe), selectedText.toString(), CFI);
 
+            range.removeAllRanges()
+
             return {};
 
         } catch (err) {
@@ -124,7 +126,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
             cfi: cfi
         };
 
-        this.annotations.get("bbPageSetView").trigger("highlightCreatedEvent", event, highlightDetails);
+        this.annotations.get("bbPageSetView").trigger("highlightCreatedEvent", {}, highlightDetails);
 
     },
 
