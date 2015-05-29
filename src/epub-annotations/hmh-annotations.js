@@ -31,35 +31,50 @@ var ReflowableAnnotations = Backbone.Model.extend({
         var self = this;
         epubWindow.on("mouseup", function() {
 
-            var ePubIframe = self.get("contentDocumentDOM");
-            var range = rangy.getSelection(ePubIframe);
-            var selectedText = rangy.getSelection(ePubIframe).getRangeAt(0);
+            // var ePubIframe = self.get("contentDocumentDOM");
+            // var range = rangy.getSelection(ePubIframe);
+            // var selectedText = rangy.getSelection(ePubIframe).getRangeAt(0);
 
-            if (selectedText.toString() === "" || selectedText=== undefined) {
+            // if (selectedText.toString() === "" || selectedText=== undefined) {
 
-                return;
+            //     return;
 
-            } else {
+            // } else {
 
-                self.createRangyHighlight();
+            //     self.createRangyHighlight();
 
-            }
+            // }
 
         });
 
 
     },
 
-    createRangyHighlight: function() {
+    addHighlight: function(fakeCfi, id, type, styles) {
+        return this.createRangyHighlight();
+    },
+
+    addSelectionHighlight: function(fakeCfi, id, type, styles) {
+         return this.createRangyHighlight();
+    },
+
+    createRangyHighlight: function(annotationId) {
 
         this.rangy = rangy;
         //Added Rangy highlighting
         var CFI = this.getCurrentSelectionCFI();
         var ePubIframe = this.get("contentDocumentDOM");
 
+        var range = rangy.getSelection(ePubIframe);
+        var selectedText = rangy.getSelection(ePubIframe).getRangeAt(0);
+
+        if (selectedText.toString() === "" || selectedText === undefined) { return {}; }
+
+
         try {
 
-            var highlight = rangy.createClassApplier("hmh-highlight-red", {
+           
+            var highlight = rangy.createClassApplier( "hmh-highlight-red", {
               elementTagName: "span",
               elementAttributes: {
                   "data-cfi": CFI,
@@ -80,6 +95,8 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
             this.dispatchHighlight(rangy.serializeSelection(ePubIframe), selectedText.toString(), CFI);
 
+            return {};
+
         } catch (err) {
             console.log('Problem applying highlight');
         }
@@ -93,15 +110,13 @@ var ReflowableAnnotations = Backbone.Model.extend({
         //debugger;
 
         //on response
-        // $('[data-highlight-id]').attr(annotation_id);
-        // $('[data-highlight-id]').addClass('annotation_' + annotation_id)
+        //this.updateHighlightId()
 
     },
 
 
-    updateHighlightId: function(annotationId){
-        $('[data-highlight-id]').attr(annotationId);
-        $('[data-highlight-id]').addClass('annotation_' + annotationId)
+    updateTempHighlightId: function(annotationId){
+        $("span[data-highlight-id='temp']").addClass('annotation_' + annotationId).attr('data-highlight-id',annotationId)
     },
 
     updateHighlightStyle: function(annotationId, newStyle){

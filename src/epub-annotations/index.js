@@ -16,14 +16,11 @@ var EpubAnnotations = function(contentDocumentDOM, bbPageSetView, annotationCSSU
   // Description: The public interface
   return {
     //added for HMH
-    updateHighlightId: function(id) {
-      return reflowableAnnotations.updateHighlightId(id);
+    updateTempHighlightId: function(id) {
+      return reflowableAnnotations.updateTempHighlightId(id);
     },
     updateHighlightStyle: function(annotationId, newStyle) {
       return reflowableAnnotations.updateHighlightId(id);
-    },
-    addSelectionHighlight: function(id, type, styles) {
-      return reflowableAnnotations.addSelectionHighlight(id, type, styles);
     },
     //HMH ends
     addSelectionHighlight: function(id, type, styles) {
