@@ -87,7 +87,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
     dispatchHighlight: function(serialized, text, CFI) {
 
         //evet for RCE to listen for
-        debugger;
+        //debugger;
 
         //on response
         // $('[data-highlight-id]').attr(annotation_id);
