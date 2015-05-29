@@ -1,5 +1,9 @@
 # Change log
 
+## [0.4.0] - 2015-05-29
+
+- Annotations through Rangy
+
 ## [0.3.2] - 2015-05-27
 
 - Fixed audio to work with scroll on our custom scrollview
