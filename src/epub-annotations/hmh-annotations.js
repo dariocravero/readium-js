@@ -76,13 +76,16 @@ var ReflowableAnnotations = Backbone.Model.extend({
             });
 
             highlight.applyToSelection(ePubIframe);
-            var selectedText = rangy.getSelection(ePubIframe).getRangeAt(0)
+            var selectedText = rangy.getSelection(ePubIframe).getRangeAt(0);
+
             this.dispatchHighlight(rangy.serializeSelection(ePubIframe), selectedText.toString(), CFI);
 
         } catch (err) {
             console.log('Problem applying highlight');
         }
     },
+
+
 
     dispatchHighlight: function(serialized, text, CFI) {
 
@@ -95,6 +98,15 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
     },
 
+
+    updateHighlightId: function(annotationId){
+        $('[data-highlight-id]').attr(annotationId);
+        $('[data-highlight-id]').addClass('annotation_' + annotationId)
+    },
+
+    updateHighlightStyle: function(annotationId, newStyle){
+        $('.annotation_' + annotationId).attr('.annotation_' + annotationId + ' ' + newStyle )
+    },
 
 
     // this returns a partial CFI only!!
