@@ -3,7 +3,8 @@
 // EpubAnnotationsModule is now EpubAnnotations. EpubAnnotations namespace was dropped in favour
 // of explicit requires where used.
 
-var ReflowableAnnotations = require('./reflowable-annotations')
+// var ReflowableAnnotations = require('./reflowable-annotations')
+var ReflowableAnnotations = require('./hmh-annotations')
 
 var EpubAnnotations = function(contentDocumentDOM, bbPageSetView, annotationCSSUrl) {
   var reflowableAnnotations = new ReflowableAnnotations({
@@ -14,6 +15,14 @@ var EpubAnnotations = function(contentDocumentDOM, bbPageSetView, annotationCSSU
 
   // Description: The public interface
   return {
+    //added for HMH
+    updateTempHighlightId: function(id) {
+      return reflowableAnnotations.updateTempHighlightId(id);
+    },
+    updateHighlightStyle: function(annotationId, newStyle) {
+      return reflowableAnnotations.updateHighlightId(id);
+    },
+    //HMH ends
     addSelectionHighlight: function(id, type, styles) {
       return reflowableAnnotations.addSelectionHighlight(id, type, styles);
     },
