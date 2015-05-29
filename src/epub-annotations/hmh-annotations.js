@@ -14,6 +14,10 @@ var ReflowableAnnotations = Backbone.Model.extend({
     initialize: function(attributes, options) {
 
         this.epubCFI = EPUBcfi;
+        this.annotations = new Annotations({
+            readerBoundElement: $("html", this.get("contentDocumentDOM"))[0],
+            bbPageSetView: this.get("bbPageSetView")
+        });
 
 
         // inject annotation CSS into iframe
@@ -31,21 +35,22 @@ var ReflowableAnnotations = Backbone.Model.extend({
         var self = this;
         epubWindow.on("mouseup", function() {
 
-            // var ePubIframe = self.get("contentDocumentDOM");
-            // var range = rangy.getSelection(ePubIframe);
-            // var selectedText = rangy.getSelection(ePubIframe).getRangeAt(0);
+            var ePubIframe = self.get("contentDocumentDOM");
+            var range = rangy.getSelection(ePubIframe);
+            var selectedText = rangy.getSelection(ePubIframe).getRangeAt(0);
 
-            // if (selectedText.toString() === "" || selectedText=== undefined) {
+            if (selectedText.toString() === "" || selectedText === undefined) {
 
-            //     return;
+                return;
 
-            // } else {
+            } else {
 
-            //     self.createRangyHighlight();
+                self.annotations.get("bbPageSetView").trigger("textSelectionEvent", event);
+                self.createRangyHighlight();
 
-            // }
+            }
 
-            self.annotations.get("bbPageSetView").trigger("textSelectionEvent", event);
+
 
         });
 
@@ -57,10 +62,10 @@ var ReflowableAnnotations = Backbone.Model.extend({
     },
 
     addSelectionHighlight: function(fakeCfi, id, type, styles) {
-         return this.createRangyHighlight();
+        return this.createRangyHighlight();
     },
 
-    createRangyHighlight: function(annotationId) {
+    createRangyHighlight: function() {
 
         this.rangy = rangy;
         //Added Rangy highlighting
@@ -70,27 +75,26 @@ var ReflowableAnnotations = Backbone.Model.extend({
         var range = rangy.getSelection(ePubIframe);
         var selectedText = rangy.getSelection(ePubIframe).getRangeAt(0);
 
-        if (selectedText.toString() === "" || selectedText === undefined) { return {}; }
-
+        if (selectedText.toString() === "" || selectedText === undefined) {
+            return {};
+        }
 
         try {
-
-           
-            var highlight = rangy.createClassApplier( "hmh-highlight-red", {
-              elementTagName: "span",
-              elementAttributes: {
-                  "data-cfi": CFI,
-                  //this will be reset from an RCE response containing annotation_id to the highlight being saved
-                  "data-highlight-id": "temp"
-              },
-              elementProperties: {
-                  onclick: function() {
-                      //var highlightId = this.getAttributeNode('data-highlight-id').value;
-                      //TODO: need to emit event to open RCE annotations tray
-                      self.annotations.get("bbPageSetView").trigger("highlightClickEvent", event);
-                      return false;
-                  }
-              }
+            var highlight = rangy.createClassApplier("hmh-highlight-red", {
+                elementTagName: "span",
+                elementAttributes: {
+                    "data-cfi": CFI,
+                    //this will be reset from an RCE response containing annotation_id to the highlight being saved
+                    "data-highlight-id": "temp"
+                },
+                elementProperties: {
+                    onclick: function() {
+                        //var highlightId = this.getAttributeNode('data-highlight-id').value;
+                        //TODO: need to emit event to open RCE annotations tray
+                        this.annotations.get("bbPageSetView").trigger("highlightClickEvent", event);
+                        return false;
+                    }
+                }
             });
 
             highlight.applyToSelection(ePubIframe);
@@ -115,22 +119,23 @@ var ReflowableAnnotations = Backbone.Model.extend({
         //on response
         //this.updateHighlightId()
         var highlightDetails = {
-            rangySerialized : serialized,
+            rangySerialized: serialized,
             text: text,
             cfi: cfi
         };
-        
-        self.annotations.get("bbPageSetView").trigger("highlightCreatedEvent", event, highlightDetails);
+
+        this.annotations.get("bbPageSetView").trigger("highlightCreatedEvent", event, highlightDetails);
 
     },
 
 
-    updateTempHighlightId: function(annotationId){
-        $("span[data-highlight-id='temp']").addClass('annotation_' + annotationId).attr('data-highlight-id',annotationId)
+    updateTempHighlightId: function(annotationId) {
+        debugger;
+        $("span[data-highlight-id='temp']").addClass('annotation_' + annotationId).attr('data-highlight-id', annotationId)
     },
 
-    updateHighlightStyle: function(annotationId, newStyle){
-        $('.annotation_' + annotationId).attr('.annotation_' + annotationId + ' ' + newStyle )
+    updateHighlightStyle: function(annotationId, newStyle) {
+        $('.annotation_' + annotationId).attr('.annotation_' + annotationId + ' ' + newStyle)
     },
 
 
