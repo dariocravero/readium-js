@@ -3,7 +3,8 @@
 // EpubAnnotationsModule is now EpubAnnotations. EpubAnnotations namespace was dropped in favour
 // of explicit requires where used.
 
-var ReflowableAnnotations = require('./reflowable-annotations')
+// var ReflowableAnnotations = require('./reflowable-annotations')
+var ReflowableAnnotations = require('./hmh-annotations')
 
 var EpubAnnotations = function(contentDocumentDOM, bbPageSetView, annotationCSSUrl) {
   var reflowableAnnotations = new ReflowableAnnotations({
