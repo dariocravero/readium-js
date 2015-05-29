@@ -45,6 +45,8 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
             // }
 
+            self.annotations.get("bbPageSetView").trigger("textSelectionEvent", event);
+
         });
 
 
@@ -85,6 +87,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
                   onclick: function() {
                       //var highlightId = this.getAttributeNode('data-highlight-id').value;
                       //TODO: need to emit event to open RCE annotations tray
+                      self.annotations.get("bbPageSetView").trigger("highlightClickEvent", event);
                       return false;
                   }
               }
@@ -104,13 +107,20 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
 
 
-    dispatchHighlight: function(serialized, text, CFI) {
+    dispatchHighlight: function(serialized, text, cfi) {
 
         //evet for RCE to listen for
         //debugger;
 
         //on response
         //this.updateHighlightId()
+        var highlightDetails = {
+            rangySerialized : serialized,
+            text: text,
+            cfi: cfi
+        };
+        
+        self.annotations.get("bbPageSetView").trigger("highlightCreatedEvent", event, highlightDetails);
 
     },
 
