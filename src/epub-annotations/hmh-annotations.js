@@ -27,6 +27,8 @@ var ReflowableAnnotations = Backbone.Model.extend({
         this.annotationsActions = window.rceReadiumBridge.annotations.actions;
         this.annotationsStore = window.rceReadiumBridge.annotations.store;
 
+        this.bookStore = window.rceReadiumBridge.book.store;
+
         // emit an event when user selects some text.
         var epubWindow = $(this.get("contentDocumentDOM"));
         var self = this;
@@ -95,11 +97,17 @@ var ReflowableAnnotations = Backbone.Model.extend({
         var ePubIframe = this.get("contentDocumentDOM");
         var range = rangy.getSelection(ePubIframe).getRangeAt(0);
 
+
+        //debugger;
         var highlightDetails = {
             rangySerialized: rangy.serializeSelection(ePubIframe),
             text: range.toString(),
             cfi: cfi,
-            objectid: range.commonAncestorContainer.getAttribute('data-uuid')
+            objectId: range.commonAncestorContainer.getAttribute('data-uuid'),
+            contentId: this.bookStore.metadata.result.isbn,
+            style: 'hmh-highlight-red',
+            color: 'red',
+            path: range.toString()
         };
 
         
