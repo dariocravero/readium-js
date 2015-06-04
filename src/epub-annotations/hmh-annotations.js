@@ -32,7 +32,18 @@ var ReflowableAnnotations = Backbone.Model.extend({
           state.list.forEach(function(annotation) {
             var $el = epubWindow.find("#annotation_" + annotation.annotationId);
             $el.removeClass();
-            $el.addClass('hmh-highlight-' + annotation.color + ' hmh-highlight-' + annotation.decoration);
+            if(annotation.decoration == 'fill'){
+                 $el.css('border','0');
+                 $el.css('background',annotation.color);
+            }else{
+                //underline
+                $el.css('background', 'transparent');
+                $el.css('border-bottom', '2px solid transparent');
+                $el.css('border-color', annotation.color);
+            }
+           
+
+            //$el.addClass('hmh-highlight-' + annotation.color + ' hmh-highlight-' + annotation.decoration);
           })
         }.bind(this));
 
@@ -73,7 +84,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
             return {};
         }
         try {
-            var highlight = rangy.createClassApplier("hmh-highlight-red", {
+            var highlight = rangy.createClassApplier("hmh-highlight-default", {
                 elementTagName: "span",
                 elementAttributes: {
                     "data-cfi": CFI,
@@ -114,8 +125,8 @@ var ReflowableAnnotations = Backbone.Model.extend({
             cfi: cfi,
             objectId: range.commonAncestorContainer.getAttribute('data-uuid'),
             contentId: this.bookStore.metadata.result.isbn,
-            style: 'hmh-highlight-red',
-            color: 'red',
+            style: 'hmh-highlight-default',
+            color: '#40e6d9',
             path: cfi,
             rangySerialized: rangy.serializeSelection(ePubIframe)
         };
