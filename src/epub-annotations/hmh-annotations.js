@@ -31,6 +31,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
         // emit an event when user selects some text.
         var epubWindow = $(this.get("contentDocumentDOM"));
+        
         var self = this;
         epubWindow.on("mouseup", function() {
             var ePubIframe = self.get("contentDocumentDOM");
@@ -68,18 +69,18 @@ var ReflowableAnnotations = Backbone.Model.extend({
                 elementTagName: "span",
                 elementAttributes: {
                     "data-cfi": CFI,
-                    //this will be reset from an RCE response containing annotation_id to the highlight being saved
-                    "data-highlight-id": "temp"
+                    "id" : "temp_annotation"
                 },
                 elementProperties: {
                     onclick: function() {
                         //var highlightId = this.getAttributeNode('data-highlight-id').value;
                         //TODO: need to emit event to open RCE annotations tray
-                        this.annotations.get("bbPageSetView").trigger("highlightClickEvent", event);
+                        //this.annotations.get("bbPageSetView").trigger("highlightClickEvent", event);
                         return false;
                     }
                 }
             });
+
             highlight.applyToSelection(ePubIframe);
             
             if (this.dispatchHighlight(CFI)){
@@ -87,8 +88,9 @@ var ReflowableAnnotations = Backbone.Model.extend({
             }
             
             return {};
+
         } catch (err) {
-            console.log('Problem applying highlight');
+            console.error(err);
         }
     },
 
@@ -100,26 +102,27 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
         //debugger;
         var highlightDetails = {
-            rangySerialized: rangy.serializeSelection(ePubIframe),
             text: range.toString(),
             cfi: cfi,
             objectId: range.commonAncestorContainer.getAttribute('data-uuid'),
             contentId: this.bookStore.metadata.result.isbn,
             style: 'hmh-highlight-red',
             color: 'red',
-            path: range.toString()
+            path: cfi,
+            rangySerialized: rangy.serializeSelection(ePubIframe)
         };
 
-        
+        this.tempListener = this.annotationsStore.addChangeListener(this.updateTempHighlightId.bind(this));
         this.annotationsActions.add(highlightDetails);
-        return true;
-        //bind to change event of annotaion in store and trugger this.updateTempHighlightId
 
-        //this.annotationsStore.addC
+        return true;
     },
 
-    updateTempHighlightId: function(annotationId) {
-        $("span[data-highlight-id='temp']").addClass('annotation_' + annotationId).attr('data-highlight-id', annotationId)
+
+
+    updateTempHighlightId: function() {
+        $(this.get("contentDocumentDOM")).find("#temp_annotation").attr('id','annotation_'+this.annotationsStore.last.annotationId);
+        this.tempListener.dispose();
     },
 
     updateHighlightStyle: function(annotationId, newStyle) {
