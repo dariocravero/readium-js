@@ -27,11 +27,19 @@ var ReflowableAnnotations = Backbone.Model.extend({
         this.annotationsActions = window.rceReadiumBridge.annotations.actions;
         this.annotationsStore = window.rceReadiumBridge.annotations.store;
 
+        this.annotationsChangeListener = this.annotationsStore.addChangeListener(function(state) {
+          var epubWindow = $(this.get("contentDocumentDOM"));
+          state.list.forEach(function(annotation) {
+            var $el = epubWindow.find("#annotation_" + annotation.annotationId);
+            $el.removeClass();
+            $el.addClass('hmh-highlight-' + annotation.color + ' hmh-highlight-' + annotation.decoration);
+          })
+        }.bind(this));
+
         this.bookStore = window.rceReadiumBridge.book.store;
 
         // emit an event when user selects some text.
         var epubWindow = $(this.get("contentDocumentDOM"));
-        
         var self = this;
         epubWindow.on("mouseup", function() {
             var ePubIframe = self.get("contentDocumentDOM");
