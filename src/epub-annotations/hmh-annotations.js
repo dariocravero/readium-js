@@ -27,6 +27,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
     this.annotationsActions = window.rceReadiumBridge.annotations.actions;
     this.annotationsStore = window.rceReadiumBridge.annotations.store;
 
+    
     this.annotationsChangeListener = this.annotationsStore.addChangeListener(function(state) {
       var epubWindow = $(this.get("contentDocumentDOM"));
       var existingIds = [];
@@ -153,7 +154,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
       objectId: objectId,
       contentId: this.bookStore.metadata.result.isbn,
       style: 'hmh-highlight-default',
-      color: '#40e6d9',
+      color: '#f6d855',
       path: cfi,
       rangySerialized: rangy.serializeSelection(ePubIframe)
     };

@@ -1,5 +1,14 @@
 # Change log
 
+## [0.4.5] - 2015-06-04
+
+- Default color updated, objectid parsed from CFI to be more reliable
+
+## [0.4.4] - 2015-06-04
+
+- Update list of highlihgts based on store.
+- Click to go to highlight
+
 ## [0.4.3] - 2015-06-04
 
 - Highlight styling markup updated
