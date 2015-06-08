@@ -27,6 +27,63 @@ var ReflowableAnnotations = Backbone.Model.extend({
     this.annotationsActions = window.rceReadiumBridge.annotations.actions;
     this.annotationsStore = window.rceReadiumBridge.annotations.store;
 
+    var self = this;
+
+    window.rceReadiumBridge.annotations.isReady(function(list) {
+
+      console.log('annotations are ready -> list', list);
+
+      var ePubIframe = self.get("contentDocumentDOM");
+      var epubWindow = $(self.get("contentDocumentDOM"));
+
+      var IDs = [];
+      $(ePubIframe).find("[id]").each(function(){ IDs.push(this.id); });
+
+      list.forEach(function(annotation, i){
+
+        if(IDs.indexOf('data-uuid-'+ annotation.objectId) > -1){
+          if(annotation.rangySerialized != undefined){
+
+                rangy.deserializeSelection(annotation.rangySerialized, null, ePubIframe.defaultView);  //window.frames[0]);
+                var highlight = rangy.createClassApplier("hmh-highlight-default", {
+                elementTagName: "span",
+                elementAttributes: {
+                  "data-cfi": annotation.cfi,
+                  "id" : "#annotation_" + annotation.id
+                },
+                elementProperties: {
+                  onclick: function() {
+                    self.annotationsActions.setActive(this.getAttributeNode('id').value.replace('annotation_', ''));
+                    return false;
+                  }
+                }
+              });
+
+              serializedRange = rangy.serializeSelection(ePubIframe)
+              highlight.applyToSelection(ePubIframe);
+              var range = rangy.getSelection(ePubIframe);
+              range.removeAllRanges();
+
+
+              var $el = epubWindow.find("#annotation_" + annotation.id);
+              $el.removeClass();
+              $el.css('cursor', 'pointer');
+              if(annotation.decoration == 'fill'){
+                $el.css('border','0');
+                $el.css('background',annotation.color);
+              }else{
+                //underline
+                $el.css('background', 'transparent');
+                $el.css('border-bottom', '2px solid transparent');
+                $el.css('border-color', annotation.color);
+              }
+              
+         }
+        }
+      });
+    });
+
+    
     
     this.annotationsChangeListener = this.annotationsStore.addChangeListener(function(state) {
       var epubWindow = $(this.get("contentDocumentDOM"));
@@ -120,9 +177,10 @@ var ReflowableAnnotations = Backbone.Model.extend({
         }
       });
 
+      serializedRange = rangy.serializeSelection(ePubIframe)
       highlight.applyToSelection(ePubIframe);
 
-      if (this.dispatchHighlight(CFI)){
+      if (this.dispatchHighlight(CFI,serializedRange)){
         range.removeAllRanges();
       }
 
@@ -139,7 +197,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
     return t[t.length-1].split(']')[0].split('-')[2];
   },
 
-  dispatchHighlight: function(cfi) {
+  dispatchHighlight: function(cfi,serializedRange) {
 
     var ePubIframe = this.get("contentDocumentDOM");
     var range = rangy.getSelection(ePubIframe).getRangeAt(0);
@@ -156,7 +214,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
       style: 'hmh-highlight-default',
       color: '#f6d855',
       path: cfi,
-      rangySerialized: rangy.serializeSelection(ePubIframe)
+      rangySerialized: serializedRange
     };
 
     this.tempListener = this.annotationsStore.addChangeListener(this.updateTempHighlightId.bind(this));
