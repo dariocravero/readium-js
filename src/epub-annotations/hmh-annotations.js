@@ -29,9 +29,10 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
     var self = this;
 
+
     window.rceReadiumBridge.annotations.isReady(function(list) {
 
-      console.log('annotations are ready -> list', list.toJS());
+      //console.log('annotations are ready -> list', list.toJS());
 
       var ePubIframe = self.get("contentDocumentDOM");
 
@@ -41,6 +42,8 @@ var ReflowableAnnotations = Backbone.Model.extend({
       list.forEach(function(annotation, i){
 
         if(IDs.indexOf('data-uuid-'+ annotation.objectId) > -1){
+
+
           if(annotation.rangySerialized != undefined){
                 
                 if(annotation.decoration == 'fill'){
@@ -51,6 +54,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
                 }
 
                 rangy.deserializeSelection(annotation.rangySerialized, null, ePubIframe.defaultView);  //window.frames[0]);
+                
                 var highlight = rangy.createClassApplier("hmh-highlight", {
                   elementTagName: "span",
                   elementAttributes: {
@@ -83,6 +87,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
         }
       });
     });
+
 
     
     
@@ -184,7 +189,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
         }
       });
 
-      serializedRange = rangy.serializeSelection(ePubIframe)
+      serializedRange = rangy.serializeSelection(ePubIframe, true);
       highlight.applyToSelection(ePubIframe);
 
       if (this.dispatchHighlight(CFI,serializedRange)){
