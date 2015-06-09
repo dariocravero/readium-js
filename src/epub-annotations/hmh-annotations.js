@@ -31,10 +31,9 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
     window.rceReadiumBridge.annotations.isReady(function(list) {
 
-      console.log('annotations are ready -> list', list);
+      console.log('annotations are ready -> list', list.toJS());
 
       var ePubIframe = self.get("contentDocumentDOM");
-      var epubWindow = $(self.get("contentDocumentDOM"));
 
       var IDs = [];
       $(ePubIframe).find("[id]").each(function(){ IDs.push(this.id); });
@@ -43,41 +42,43 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
         if(IDs.indexOf('data-uuid-'+ annotation.objectId) > -1){
           if(annotation.rangySerialized != undefined){
+                
+                if(annotation.decoration == 'fill'){
+                  var css ='cursor:pointer;border:0;background:'+annotation.color;
+                }else{
+                  //underline
+                  var css = 'cursor:pointer;background:transparent;border-bottom:2px solid transparent:border-color:'+ annotation.color;
+                }
 
                 rangy.deserializeSelection(annotation.rangySerialized, null, ePubIframe.defaultView);  //window.frames[0]);
-                var highlight = rangy.createClassApplier("hmh-highlight-default", {
-                elementTagName: "span",
-                elementAttributes: {
-                  "data-cfi": annotation.cfi,
-                  "id" : "#annotation_" + annotation.id
-                },
-                elementProperties: {
-                  onclick: function() {
-                    self.annotationsActions.setActive(this.getAttributeNode('id').value.replace('annotation_', ''));
-                    return false;
-                  }
-                }
-              });
+                var highlight = rangy.createClassApplier("hmh-highlight", {
+                  elementTagName: "span",
+                  elementAttributes: {
+                    "data-cfi": annotation.cfi,
+                    "id" : "annotation_" + annotation.id,
+                    "style" : css
+                  },
+                  elementProperties: {
+                    onclick: function(event) {
 
-              serializedRange = rangy.serializeSelection(ePubIframe)
+                      //debugger
+                      
+                      self.annotationsActions.setActive(this.getAttributeNode('id').value.replace('annotation_', ''));
+                      event.stopPropagation();
+                      return false;
+                    }
+                  }
+                });
+
+    
               highlight.applyToSelection(ePubIframe);
               var range = rangy.getSelection(ePubIframe);
-              range.removeAllRanges();
-
-
-              var $el = epubWindow.find("#annotation_" + annotation.id);
-              $el.removeClass();
-              $el.css('cursor', 'pointer');
-              if(annotation.decoration == 'fill'){
-                $el.css('border','0');
-                $el.css('background',annotation.color);
-              }else{
-                //underline
-                $el.css('background', 'transparent');
-                $el.css('border-bottom', '2px solid transparent');
-                $el.css('border-color', annotation.color);
-              }
               
+
+              $(ePubIframe).find("#annotation_" + annotation.id).removeClass();
+              range.removeAllRanges();
+              
+
          }
         }
       });
@@ -86,17 +87,22 @@ var ReflowableAnnotations = Backbone.Model.extend({
     
     
     this.annotationsChangeListener = this.annotationsStore.addChangeListener(function(state) {
+
+      console.log('changed');
       var epubWindow = $(this.get("contentDocumentDOM"));
       var existingIds = [];
 
       state.list.forEach(function(annotation) {
         var $el = epubWindow.find("#annotation_" + annotation.id);
         $el.removeClass();
+        
         $el.css('cursor', 'pointer');
         if(annotation.decoration == 'fill'){
           $el.css('border','0');
           $el.css('background',annotation.color);
+
         }else{
+
           //underline
           $el.css('background', 'transparent');
           $el.css('border-bottom', '2px solid transparent');
@@ -112,23 +118,22 @@ var ReflowableAnnotations = Backbone.Model.extend({
           $el.contents().unwrap();
         }
       });
+
+
     }.bind(this));
 
     this.bookStore = window.rceReadiumBridge.book.store;
 
     // emit an event when user selects some text.
-    var epubWindow = $(this.get("contentDocumentDOM"));
+    var ePubIframe = self.get("contentDocumentDOM");
     var self = this;
-    epubWindow.on("mouseup", function() {
-      var ePubIframe = self.get("contentDocumentDOM");
+    ePubIframe.addEventListener("click", function(event) {
       var range = rangy.getSelection(ePubIframe);
       var selectedText = rangy.getSelection(ePubIframe).getRangeAt(0);
 
-
-      if (selectedText.toString() === "" || selectedText === undefined) {
-        return;
-      } else {
+      if (typeof selectedText !== 'undefined' && selectedText.toString() !== '') {
         //self.annotations.get("bbPageSetView").trigger("textSelectionEvent", event);
+        event.stopImmediatePropagation();
         self.createRangyHighlight();
       }
     });
@@ -165,10 +170,12 @@ var ReflowableAnnotations = Backbone.Model.extend({
           "id" : "temp_annotation"
         },
         elementProperties: {
-          onclick: function() {
+          onclick: function(event) {
             //var highlightId = this.getAttributeNode('data-highlight-id').value;
             //TODO: need to emit event to open RCE annotations tray
             //this.annotations.get("bbPageSetView").trigger("highlightClickEvent", event);
+
+            event.stopPropagation();
 
             self.annotationsActions.setActive(this.getAttributeNode('id').value.replace('annotation_', ''));
 

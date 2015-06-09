@@ -1,5 +1,9 @@
 # Change log
 
+## [0.4.6] - 2015-06-09
+
+- Rehydration of rangy based highlights
+
 ## [0.4.5] - 2015-06-04
 
 - Default color updated, objectid parsed from CFI to be more reliable
