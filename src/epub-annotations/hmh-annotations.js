@@ -41,7 +41,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
       list.forEach(function(annotation, i){
 
-        if(IDs.indexOf('data-uuid-'+ annotation.objectId) > -1){
+        if(IDs.indexOf('data-uuid-'+ annotation._cas.object_id) > -1){
 
 
           if(annotation.rangySerialized != undefined){
@@ -205,7 +205,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
   getObjectIdFromCFI: function(cfi){
     t = cfi.split('[');
-    //objectId
+    //object_id
     return t[t.length-1].split(']')[0].split('-')[2];
   },
 
@@ -215,15 +215,15 @@ var ReflowableAnnotations = Backbone.Model.extend({
     var range = rangy.getSelection(ePubIframe).getRangeAt(0);
 
     //safer/more reliable to get the objectID from the CFI
-    objectId = this.getObjectIdFromCFI(cfi);
+    object_id = this.getObjectIdFromCFI(cfi);
 
 
     var highlightDetails = {
       text: range.toString(),
       cfi: cfi,
-      objectId: objectId,
-      contentId: this.bookStore.metadata.result.isbn,
-      style: 'hmh-highlight-default',
+      object_id: object_id,
+      content_id: this.bookStore.metadata.result.isbn,
+      decoration: 'fill',
       color: '#f6d855',
       path: cfi,
       rangySerialized: serializedRange
