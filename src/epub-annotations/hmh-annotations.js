@@ -26,12 +26,14 @@ var ReflowableAnnotations = Backbone.Model.extend({
     this.rangy.init();
     this.annotationsActions = window.rceReadiumBridge.annotations.actions;
     this.annotationsStore = window.rceReadiumBridge.annotations.store;
+    this.tocStore = window.rceReadiumBridge.toc.store;
 
     var self = this;
 
 
     window.rceReadiumBridge.annotations.isReady(function(list) {
 
+   
       //console.log('annotations are ready -> list', list.toJS());
 
       var ePubIframe = self.get("contentDocumentDOM");
@@ -217,6 +219,8 @@ var ReflowableAnnotations = Backbone.Model.extend({
     //safer/more reliable to get the objectID from the CFI
     objectId = this.getObjectIdFromCFI(cfi);
 
+    //getLocation
+    //debugger;
 
     var highlightDetails = {
       text: range.toString(),
@@ -225,9 +229,11 @@ var ReflowableAnnotations = Backbone.Model.extend({
       contentId: this.bookStore.metadata.result.isbn,
       style: 'hmh-highlight-default',
       color: '#f6d855',
-      path: cfi,
+      path:  this.tocStore.activeNode.toJS().id + '#' + cfi,
       rangySerialized: serializedRange
     };
+
+    //debugger;
 
     this.tempListener = this.annotationsStore.addChangeListener(this.updateTempHighlightId.bind(this));
     this.annotationsActions.add(highlightDetails);
