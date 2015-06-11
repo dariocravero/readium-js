@@ -52,7 +52,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
                   var css ='cursor:pointer;border:0;background:'+annotation.color;
                 }else{
                   //underline
-                  var css = 'cursor:pointer;background:transparent;border-bottom:2px solid transparent:border-color:'+ annotation.color;
+                  var css = 'cursor:pointer;background:transparent;border-bottom:2px solid transparent;border-color:'+ annotation.color;
                 }
 
                 rangy.deserializeSelection(annotation.rangySerialized, null, ePubIframe.defaultView);  //window.frames[0]);
