@@ -1,5 +1,9 @@
 # Change log
 
+## [0.4.13] - 2015-06-09
+
+- Fixed for empty spans created for unused selections
+
 ## [0.4.12] - 2015-06-09
 
 - Prevent list iteration if there's no list

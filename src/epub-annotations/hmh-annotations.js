@@ -126,25 +126,34 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
     }.bind(this));
 
+
+
+
     this.bookStore = window.rceReadiumBridge.book.store;
 
     // emit an event when user selects some text.
-    var ePubIframe = self.get("contentDocumentDOM");
+    var ePubIframe = self.get("contentDocumentDOM"), savedRange = '';
     var self = this;
 
     ePubIframe.addEventListener("click", function(event) {
       
+
       var range = rangy.getSelection(ePubIframe);
       var selectedText = rangy.getSelection(ePubIframe).getRangeAt(0);
 
+      if(savedRange.rangeInfos !== undefined){
+        $(ePubIframe).find('.rangySelectionBoundary').remove()
+      }
+      
+
       $(ePubIframe).find('#menu-choice').remove();
 
-      if (typeof selectedText !== 'undefined' && selectedText.toString() !== '' && selectedText.canSurroundContents() === true) {
-
+      if (typeof selectedText !== 'undefined' && selectedText.toString().trim() !== '' && selectedText.canSurroundContents() === true) {
 
         event.stopImmediatePropagation();
 
         savedRange = rangy.saveSelection(ePubIframe);
+
         $(ePubIframe).find('#menu-choice').remove();
         $(ePubIframe).find('body').append('<style>.selection_menu:hover{opacity: 0.75;}#menu-choice:before{content:"\\25c0";color:#EEA833; margin-left: -18px;margin-top: -16px; line-height: 32px; vertical-align: middle; height: 32px;}</style><div id="menu-choice" style="cursor: pointer; height: 38px; -webkit-box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40); -moz-box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40); box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40);width: 50px; font-size: 12px; text-transform: uppercase; line-height: 16px; padding: 3px; padding-left: 6px; border-left: 2px solid #EEA833; position: absolute; z-index: 999; top: '+(event.pageY-20)+'px; left: '+(event.pageX+20)+'px; background: #fff; font-weight: bold;"><div class="selection_menu save" style="margin-top: -32px;">Save</div><div class="selection_menu edit" style="padding-top: 1px">Edit</div></div>');
         
@@ -157,6 +166,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
           //reapply range
           $(ePubIframe).find('#menu-choice').remove();
           rangy.restoreSelection(savedRange);
+
 
           $(this).hasClass('edit') ? self.createRangyHighlight() : self.createRangyHighlight(true);
           
