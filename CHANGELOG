@@ -1,5 +1,9 @@
 # Change log
 
+## [0.4.11] - 2015-06-09
+
+- Added context menu to text selection
+
 ## [0.4.6] - 2015-06-09
 
 - Rehydration of rangy based highlights
