@@ -90,8 +90,9 @@ var ReflowableAnnotations = Backbone.Model.extend({
     
     
     this.annotationsChangeListener = this.annotationsStore.addChangeListener(function(state) {
-
-      console.log('changed');
+      if (!state.list) {
+        return;
+      }
       var epubWindow = $(this.get("contentDocumentDOM"));
       var existingIds = [];
 

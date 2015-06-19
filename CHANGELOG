@@ -1,5 +1,9 @@
 # Change log
 
+## [0.4.12] - 2015-06-09
+
+- Prevent list iteration if there's no list
+
 ## [0.4.11] - 2015-06-09
 
 - Added context menu to text selection
