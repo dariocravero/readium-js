@@ -329,6 +329,18 @@ var ReflowableAnnotations = Backbone.Model.extend({
     var startOffset;
     var endOffset;
     var rangeCFIComponent;
+
+    if (startNode.nodeType !== Node.TEXT_NODE &&
+        (startNode === endNode.parentNode || startNode === endNode) &&
+        selectedRange.startOffset === 0) {
+      startNode = startNode.childNodes[0];
+    }
+    if (endNode.nodeType !== Node.TEXT_NODE &&
+        (endNode === startNode.parentNode || startNode === endNode) &&
+        selectedRange.endOffset > 0) {
+      endNode = endNode.childNodes[endNode.childNodes.length - 1];
+    }
+
     if (startNode.nodeType === Node.TEXT_NODE && endNode.nodeType === Node.TEXT_NODE) {
       startOffset = selectedRange.startOffset;
       endOffset = selectedRange.endOffset;
