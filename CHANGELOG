@@ -1,5 +1,9 @@
 # Change log
 
+## [0.4.16] - 2015-06-26
+### Fixed
+- Open sidebar on an anontation's click
+
 ## [0.4.15] - 2015-06-26
 ### Changed
 - Highlights to resemble the new structure.

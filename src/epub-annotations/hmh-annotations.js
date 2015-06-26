@@ -176,12 +176,10 @@ var ReflowableAnnotations = Backbone.Model.extend({
         },
         elementProperties: {
           onclick: function(event) {
-            //var highlightId = this.getAttributeNode('data-highlight-id').value;
-            //TODO: need to emit event to open RCE annotations tray
-            //this.annotations.get("bbPageSetView").trigger("highlightClickEvent", event);
-
             event.stopPropagation();
             self.annotationsActions.setActive(this.getAttributeNode('id').value.replace('annotation_', ''));
+            self.sidebarActions.setPanel('annotations', 'myNotes');
+            self.sidebarActions.show();
             return false;
           }
         }
