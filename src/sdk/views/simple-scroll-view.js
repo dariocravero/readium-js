@@ -1309,8 +1309,6 @@ function SimpleScrollView(options, isContinuousScroll, reader) {
 
     var elementRange = getElementRange(pageView, $element);
 
-    console.log('elementRange', elementRange)
-
     if (!isRangeIsVisibleOnScreen(elementRange, 60)) {
 
       var spineItem = _spine.getItemById(spineItemId);

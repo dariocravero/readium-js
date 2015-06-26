@@ -1536,7 +1536,6 @@ console.debug("textAbsoluteRef: " + textAbsoluteRef);
     } else if (_currentTTS) {
       speakStart(undefined);
     } else {
-      console.log('MOplay')
       if (!_audioPlayer.play()) {
         console.log("Audio player was dead, reactivating...");
 
