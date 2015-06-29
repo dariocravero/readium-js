@@ -560,6 +560,11 @@ function SimpleScrollView(options, isContinuousScroll, reader) {
 
     _$contentFrame.css('height', '100%');
 
+     //to allow fullscreen
+    _$contentFrame.attr("allowfullscreen", "true");
+    _$contentFrame.attr("webkitallowfullscreen", "true");
+    _$contentFrame.attr("mozAllowfullscreen", "true");
+
     // _$contentFrame.css("left", rectangle.left);
     // _$contentFrame.css("top", rectangle.top);
     // _$contentFrame.css("right", rectangle.right);

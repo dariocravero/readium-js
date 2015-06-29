@@ -318,6 +318,12 @@ function SimpleOnePageView(options, classes, enableBookStyleOverrides, reader) {
     _$el.css("height", "100%");
     _$el.css("width", "100%");
 
+
+     //to allow fullscreen
+    _$el.attr("allowfullscreen", "true");
+    _$el.attr("webkitallowfullscreen", "true");
+    _$el.attr("mozAllowfullscreen", "true");
+
     for (var i = 0, count = classes.length; i < count; i++) {
       _$el.addClass(classes[i]);
     }
