@@ -35,42 +35,45 @@ var ReflowableAnnotations = Backbone.Model.extend({
       var idref = self.tocStore.activeNode.__toJS().id;
 
       state.list.forEach(function(id, i) {
-        var annotation = state.annotations[id];
-        if (annotation.path.indexOf(idref) > -1 ) {
-          if (ePubIframe.getElementById('data-uuid-'+ annotation.object_id) !== null) {
+        try {
+          var annotation = state.annotations[id];
+          if (annotation.path.indexOf(idref) > -1 ) {
+            if (ePubIframe.getElementById('data-uuid-'+ annotation.object_id) !== null) {
+              if (typeof annotation.rangySerialized !== 'undefined') {
+                var css = annotation.style === 'fill' ?
+                  'cursor:pointer;border:0;background:' + annotation.color :
+                  'cursor:pointer;background:transparent;border-bottom:2px solid transparent;border-color:' + annotation.color;
 
-            if (typeof annotation.rangySerialized !== 'undefined') {
-              var css = annotation.style === 'fill' ?
-                'cursor:pointer;border:0;background:' + annotation.color :
-                'cursor:pointer;background:transparent;border-bottom:2px solid transparent;border-color:' + annotation.color;
+                rangy.deserializeSelection(annotation.rangySerialized, null, ePubIframe.defaultView);
 
-              rangy.deserializeSelection(annotation.rangySerialized, null, ePubIframe.defaultView);
-
-              var highlight = rangy.createClassApplier("hmh-highlight", {
-                elementTagName: "span",
-                elementAttributes: {
-                  "data-cfi": annotation.cfi,
-                  "id" : "annotation_" + annotation.id,
-                  "style" : css
-                },
-                elementProperties: {
-                  onclick: function(event) {
-                    event.stopPropagation();
-                    self.annotationsActions.setActive(this.getAttributeNode('id').value.replace('annotation_', ''));
-                    self.sidebarActions.setPanel('annotations', 'myNotes');
-                    self.sidebarActions.show();
-                    return false;
+                var highlight = rangy.createClassApplier("hmh-highlight", {
+                  elementTagName: "span",
+                  elementAttributes: {
+                    "data-cfi": annotation.cfi,
+                    "id" : "annotation_" + annotation.id,
+                    "style" : css
+                  },
+                  elementProperties: {
+                    onclick: function(event) {
+                      event.stopPropagation();
+                      self.annotationsActions.setActive(this.getAttributeNode('id').value.replace('annotation_', ''));
+                      self.sidebarActions.setPanel('annotations', 'myNotes');
+                      self.sidebarActions.show();
+                      return false;
+                    }
                   }
-                }
-              });
+                });
 
-              highlight.applyToSelection(ePubIframe);
+                highlight.applyToSelection(ePubIframe);
 
-              var range = rangy.getSelection(ePubIframe);
-              $(ePubIframe).find("#annotation_" + annotation.id).removeClass();
-              range.removeAllRanges();
+                var range = rangy.getSelection(ePubIframe);
+                $(ePubIframe).find("#annotation_" + annotation.id).removeClass();
+                range.removeAllRanges();
+              }
             }
           }
+        } catch(err) {
+          console.error(err);
         }
       });
     });
@@ -121,24 +124,31 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
       $ePubIframe.find('#menu-choice').remove();
 
-      if (typeof selectedText !== 'undefined' && selectedText.toString().trim() !== '' && selectedText.canSurroundContents() === true) {
-        event.stopImmediatePropagation();
+      try {
+        var serializedSelection = rangy.serializeSelection(ePubIframe, true);
+        rangy.deserializeSelection(serializedSelection, null, ePubIframe.defaultView);
 
-        savedRange = rangy.saveSelection(ePubIframe);
+        if (typeof selectedText !== 'undefined' && selectedText.toString().trim() !== '' && selectedText.canSurroundContents() === true) {
+          event.stopImmediatePropagation();
 
-        $ePubIframe.find('#menu-choice').remove();
-        $ePubIframe.find('body').append('<style>.selection_menu:hover{opacity: 0.75;}#menu-choice:before{content:"\\25c0";color:#EEA833; margin-left: -18px;margin-top: -16px; line-height: 32px; vertical-align: middle; height: 32px;}</style><div id="menu-choice" style="cursor: pointer; height: 38px; -webkit-box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40); -moz-box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40); box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40);width: 50px; font-size: 12px; text-transform: uppercase; line-height: 16px; padding: 3px; padding-left: 6px; border-left: 2px solid #EEA833; position: absolute; z-index: 999; top: '+(event.pageY-20)+'px; left: '+(event.pageX+20)+'px; background: #fff; font-weight: bold;"><div class="selection_menu save" style="margin-top: -32px;">Save</div><div class="selection_menu edit" style="padding-top: 1px">Edit</div></div>');
+          savedRange = rangy.saveSelection(ePubIframe);
 
-        $ePubIframe.find('body').on('click', '.selection_menu',function(e){
-          e.stopImmediatePropagation();
-          e.preventDefault();
-
-          //reapply range
           $ePubIframe.find('#menu-choice').remove();
-          rangy.restoreSelection(savedRange);
+          $ePubIframe.find('body').append('<style>.selection_menu:hover{opacity: 0.75;}#menu-choice:before{content:"\\25c0";color:#EEA833; margin-left: -18px;margin-top: -16px; line-height: 32px; vertical-align: middle; height: 32px;}</style><div id="menu-choice" style="cursor: pointer; height: 38px; -webkit-box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40); -moz-box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40); box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40);width: 50px; font-size: 12px; text-transform: uppercase; line-height: 16px; padding: 3px; padding-left: 6px; border-left: 2px solid #EEA833; position: absolute; z-index: 999; top: '+(event.pageY-20)+'px; left: '+(event.pageX+20)+'px; background: #fff; font-weight: bold;"><div class="selection_menu save" style="margin-top: -32px;">Save</div><div class="selection_menu edit" style="padding-top: 1px">Edit</div></div>');
 
-          self.createRangyHighlight($(this).hasClass('edit'));
-        });
+          $ePubIframe.find('body').on('click', '.selection_menu',function(e){
+            e.stopImmediatePropagation();
+            e.preventDefault();
+
+            //reapply range
+            $ePubIframe.find('#menu-choice').remove();
+            rangy.restoreSelection(savedRange);
+
+            self.createRangyHighlight($(this).hasClass('edit'));
+          });
+        }
+      } catch(err) {
+        console.error(err);
       }
     });
   },
@@ -186,6 +196,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
       });
 
       serializedRange = rangy.serializeSelection(ePubIframe, true);
+
       highlight.applyToSelection(ePubIframe);
 
       if (this.dispatchHighlight(CFI,serializedRange, openSidebar)){

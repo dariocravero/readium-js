@@ -1,5 +1,11 @@
 # Change log
 
+## [0.4.18] - 2015-06-30
+### Fixed
+- Made rehydration slightly more robust so that if any annotation fails to rehydrate (generally due
+  to a wrong serialisation from rangy) it still renders the rest.
+- Prevent an annotation from being createad if rangy can't deserialised it.
+
 ## [0.4.17] - 2015-06-26
 ### Changed
 - Views updated to add allowfullscreen attribute on Readium iframe
