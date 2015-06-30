@@ -268,7 +268,9 @@ function SimpleOnePageView(options, classes, enableBookStyleOverrides, reader) {
 
 
   // fixed layout does not apply user styles to publisher content, but reflowable scroll view does
-  var _enableBookStyleOverrides = enableBookStyleOverrides || false;
+  //var _enableBookStyleOverrides = enableBookStyleOverrides || false;
+  //TODO: get a grip of this
+  var _enableBookStyleOverrides = false;
 
   var _meta_size = {
     width: 0,
