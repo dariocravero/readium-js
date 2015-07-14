@@ -25,6 +25,7 @@
 var $ = require('jquery')
 var Interpreter = require('@hmh/epub-cfi').Interpreter;
 var URI = require('URIjs')
+var EndsWith = require('../helpers/ends-with');
 
 /**
  *
@@ -181,6 +182,10 @@ function InternalLinksSupport(reader) {
     var epubContentDocument = $iframe[0].contentDocument;
 
     $('a', epubContentDocument).click(function(clickEvent) {
+      if (clickEvent.currentTarget.attributes["data-glossary"]) {
+        return;
+      }
+
       // Check for both href and xlink:href attribute and get value
       var href;
       if (clickEvent.currentTarget.attributes["xlink:href"]) {
