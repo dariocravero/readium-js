@@ -122,8 +122,6 @@ var ReflowableAnnotations = Backbone.Model.extend({
         selectedText = rangy.getSelection(ePubIframe).getRangeAt(0);
       } catch(err) {
         console.error(err);
-      } finally {
-        selectedText = undefined;
       }
 
       if (typeof selectedText !== 'undefined') {

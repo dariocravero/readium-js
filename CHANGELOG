@@ -1,5 +1,9 @@
 # Change log
 
+## [0.4.19] - 2015-07-14
+### Changed
+- Annotations to match new structure.
+
 ## [0.4.18] - 2015-06-30
 ### Fixed
 - Made rehydration slightly more robust so that if any annotation fails to rehydrate (generally due
