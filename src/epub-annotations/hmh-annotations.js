@@ -26,13 +26,14 @@ var ReflowableAnnotations = Backbone.Model.extend({
     this.annotationsActions = window.rceReadiumBridge.annotations.actions;
     this.annotationsStore = window.rceReadiumBridge.annotations.store;
     this.tocStore = window.rceReadiumBridge.toc.store;
+    this.getActiveNode = window.rceReadiumBridge.toc.getters.getActiveNode;
     this.sidebarActions = window.rceReadiumBridge.sidebar.actions;
 
     var self = this;
 
     window.rceReadiumBridge.annotations.isReady(function(state) {
       var ePubIframe = self.get("contentDocumentDOM");
-      var idref = self.tocStore.activeNode.__toJS().id;
+      var idref = self.getActiveNode(self.tocStore.state).id;
 
       state.list.forEach(function(id, i) {
         try {
@@ -116,39 +117,46 @@ var ReflowableAnnotations = Backbone.Model.extend({
 
     ePubIframe.addEventListener("click", function(event) {
       var range = rangy.getSelection(ePubIframe);
-      var selectedText = rangy.getSelection(ePubIframe).getRangeAt(0);
-
-      if(savedRange.rangeInfos !== undefined){
-        $ePubIframe.find('.rangySelectionBoundary').remove()
-      }
-
-      $ePubIframe.find('#menu-choice').remove();
-
+      var selectedText;
       try {
-        var serializedSelection = rangy.serializeSelection(ePubIframe, true);
-        rangy.deserializeSelection(serializedSelection, null, ePubIframe.defaultView);
-
-        if (typeof selectedText !== 'undefined' && selectedText.toString().trim() !== '' && selectedText.canSurroundContents() === true) {
-          event.stopImmediatePropagation();
-
-          savedRange = rangy.saveSelection(ePubIframe);
-
-          $ePubIframe.find('#menu-choice').remove();
-          $ePubIframe.find('body').append('<style>.selection_menu:hover{opacity: 0.75;}#menu-choice:before{content:"\\25c0";color:#EEA833; margin-left: -18px;margin-top: -16px; line-height: 32px; vertical-align: middle; height: 32px;}</style><div id="menu-choice" style="cursor: pointer; height: 38px; -webkit-box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40); -moz-box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40); box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40);width: 50px; font-size: 12px; text-transform: uppercase; line-height: 16px; padding: 3px; padding-left: 6px; border-left: 2px solid #EEA833; position: absolute; z-index: 999; top: '+(event.pageY-20)+'px; left: '+(event.pageX+20)+'px; background: #fff; font-weight: bold;"><div class="selection_menu save" style="margin-top: -32px;">Save</div><div class="selection_menu edit" style="padding-top: 1px">Edit</div></div>');
-
-          $ePubIframe.find('body').on('click', '.selection_menu',function(e){
-            e.stopImmediatePropagation();
-            e.preventDefault();
-
-            //reapply range
-            $ePubIframe.find('#menu-choice').remove();
-            rangy.restoreSelection(savedRange);
-
-            self.createRangyHighlight($(this).hasClass('edit'));
-          });
-        }
+        selectedText = rangy.getSelection(ePubIframe).getRangeAt(0);
       } catch(err) {
         console.error(err);
+      }
+
+      if (typeof selectedText !== 'undefined') {
+        if(typeof savedRange.rangeInfos !== 'undefined') {
+          $ePubIframe.find('.rangySelectionBoundary').remove();
+        }
+
+        $ePubIframe.find('#menu-choice').remove();
+
+        try {
+          var serializedSelection = rangy.serializeSelection(ePubIframe, true);
+          rangy.deserializeSelection(serializedSelection, null, ePubIframe.defaultView);
+
+          if (typeof selectedText !== 'undefined' && selectedText.toString().trim() !== '' && selectedText.canSurroundContents() === true) {
+            event.stopImmediatePropagation();
+
+            savedRange = rangy.saveSelection(ePubIframe);
+
+            $ePubIframe.find('#menu-choice').remove();
+            $ePubIframe.find('body').append('<style>.selection_menu:hover{opacity: 0.75;}#menu-choice:before{content:"\\25c0";color:#EEA833; margin-left: -18px;margin-top: -16px; line-height: 32px; vertical-align: middle; height: 32px;}</style><div id="menu-choice" style="cursor: pointer; height: 38px; -webkit-box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40); -moz-box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40); box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.40);width: 50px; font-size: 12px; text-transform: uppercase; line-height: 16px; padding: 3px; padding-left: 6px; border-left: 2px solid #EEA833; position: absolute; z-index: 999; top: '+(event.pageY-20)+'px; left: '+(event.pageX+20)+'px; background: #fff; font-weight: bold;"><div class="selection_menu save" style="margin-top: -32px;">Save</div><div class="selection_menu edit" style="padding-top: 1px">Edit</div></div>');
+
+            $ePubIframe.find('body').on('click', '.selection_menu',function(e){
+              e.stopImmediatePropagation();
+              e.preventDefault();
+
+              //reapply range
+              $ePubIframe.find('#menu-choice').remove();
+              rangy.restoreSelection(savedRange);
+
+              self.createRangyHighlight($(this).hasClass('edit'));
+            });
+          }
+        } catch(err) {
+          console.error(err);
+        }
       }
     });
   },
@@ -227,7 +235,7 @@ var ReflowableAnnotations = Backbone.Model.extend({
       content_id: this.bookStore.metadata.result.isbn,
       color: '#f6d855',
       object_id: object_id,
-      path:  this.tocStore.activeNode.toJS().id + '#' + cfi,
+      path:  this.getActiveNode(this.tocStore.state).id + '#' + cfi,
       rangySerialized: serializedRange,
       style: 'fill',
       text: range.toString()

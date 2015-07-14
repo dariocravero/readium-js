@@ -1,5 +1,9 @@
 # Change log
 
+## [0.4.21] - 2015-07-14
+### Changed
+- Annotations to match new structure.
+
 ## [0.4.20] - 2015-06-30
 ### Fixed
 - Fix to prevent Readium injecting in it's own styles into ePub content
