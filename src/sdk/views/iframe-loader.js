@@ -35,6 +35,11 @@ function IFrameLoader() {
     iframe.setAttribute("data-baseUri", iframe.baseURI);
     iframe.setAttribute("data-src", src);
 
+    //trap, as if it's undefined in IE it throws an exception and blocks rendering
+    if(iframe.baseURI === undefined){
+      iframe.baseURI = '';
+    }
+
     var loadedDocumentUri = new URI(src).absoluteTo(iframe.baseURI).toString();
 
     self._loadIframeWithUri(iframe, attachedData, loadedDocumentUri, function() {
