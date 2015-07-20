@@ -1,5 +1,9 @@
 # Change log
 
+## [0.4.23] - 2015-07-20
+### Changed
+- Fix to prevent IE throwing an exception when Readium parses undefined iframe attribute using URI.js
+
 ## [0.4.22] - 2015-07-14
 ### Changed
 - Prevent clicks on glossary.
