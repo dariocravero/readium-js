@@ -1,5 +1,9 @@
 # Change log
 
+## [0.4.24] - 2015-07-22
+### Changed
+- Prevent default behaviour for click on `a` tags with `data-ignore` on it.
+
 ## [0.4.23] - 2015-07-20
 ### Changed
 - Fix to prevent IE throwing an exception when Readium parses undefined iframe attribute using URI.js

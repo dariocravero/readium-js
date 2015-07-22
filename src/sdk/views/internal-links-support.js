@@ -182,7 +182,7 @@ function InternalLinksSupport(reader) {
     var epubContentDocument = $iframe[0].contentDocument;
 
     $('a', epubContentDocument).click(function(clickEvent) {
-      if (clickEvent.currentTarget.attributes["data-glossary"]) {
+      if (clickEvent.currentTarget.attributes["data-glossary"] || clickEvent.currentTarget.attributes["data-ignore"]) {
         return;
       }
 
