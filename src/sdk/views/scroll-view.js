@@ -39,6 +39,7 @@ var PageOpenRequest = require('../models/page-open-request')
 var setStyles = require('../helpers/set-styles')
 var ViewerSettings = require('../models/viewer-settings')
 
+
 /**
  * Renders content inside a scrollable view port
  * @param options
@@ -326,6 +327,7 @@ function ScrollView(options, isContinuousScroll, reader) {
     }
 
     var tryAgainFunc = function(tryAgain) {
+      var _DEBUG = true;
       if (_DEBUG && tryAgain !== MAX_ATTEMPTS) {
         console.log("tryAgainFunc - " + tryAgain + ": " + href + "  <" + initialContentHeight + " -- " + previousPolledContentHeight + ">");
       }
@@ -371,49 +373,9 @@ function ScrollView(options, isContinuousScroll, reader) {
               } else {
                 updatePageViewSize(pageView);
               }
-
-              if (isIframeAlive(iframe)) {
-                var win = iframe.contentWindow;
-                var doc = iframe.contentDocument;
-
-                var docHeightAfter = parseInt(Math.round(parseFloat(win.getComputedStyle(doc.documentElement).height))); //body can be shorter!
-                var iframeHeightAfter = parseInt(Math.round(parseFloat(window.getComputedStyle(iframe).height)));
-
-                var newdiff = iframeHeightAfter - docHeightAfter;
-                if (Math.abs(newdiff) > 4) {
-                  if (_DEBUG) {
-                    console.error("## IFRAME HEIGHT ADJUST: " + href + "  [" + newdiff + "]<" + initialContentHeight + " -- " + previousPolledContentHeight + ">");
-                    console.log(msg);
-                  }
-
-                  tryAgainFunc(tryAgain);
-                  return;
-                } else {
-                  if (_DEBUG) {
-                    console.log(">> IFRAME HEIGHT ADJUSTED OKAY: " + href + "  [" + diff + "]<" + initialContentHeight + " -- " + previousPolledContentHeight + ">");
-                    // console.log(msg);
-                  }
-                }
-              } else {
-                if (_DEBUG) {
-                  console.log("tryAgainFunc ! win && doc (iFrame disposed?)");
-                }
-
-                if (callback) callback(false);
-                return;
-              }
-            } else {
-              //if (_DEBUG)
-              // console.debug("IFRAME HEIGHT NO NEED ADJUST: " + href);
-              // console.log(msg);
-            }
-          } else {
-            if (_DEBUG) {
-              console.log("tryAgainFunc ! win && doc (iFrame disposed?)");
             }
 
-            if (callback) callback(false);
-            return;
+            return tryAgainFunc(tryAgain);
           }
         } catch (ex) {
           console.error(ex);
