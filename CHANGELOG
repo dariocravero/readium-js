@@ -1,6 +1,6 @@
 # Change log
 
-## [0.4.25] - 2015-07-29
+## [0.4.26] - 2015-07-29
 ## Fixed
 - Adjust height now tries 10 intervals of 300ms so that slow content has a change to adjust the
   height.

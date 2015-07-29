@@ -327,7 +327,6 @@ function ScrollView(options, isContinuousScroll, reader) {
     }
 
     var tryAgainFunc = function(tryAgain) {
-      var _DEBUG = true;
       if (_DEBUG && tryAgain !== MAX_ATTEMPTS) {
         console.log("tryAgainFunc - " + tryAgain + ": " + href + "  <" + initialContentHeight + " -- " + previousPolledContentHeight + ">");
       }
