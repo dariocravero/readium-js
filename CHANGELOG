@@ -1,5 +1,9 @@
 # Change log
 
+## [0.4.27] - 2015-07-30
+## Fixed
+- Prevent width being set on content-doc-iframe, causes problems with slow loading pages IE11, gets set too early and content doesn't fill viewport
+
 ## [0.4.26] - 2015-07-29
 ## Fixed
 - Adjust height now tries 10 intervals of 300ms so that slow content has a change to adjust the
