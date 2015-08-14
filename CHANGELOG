@@ -1,5 +1,9 @@
 # Change log
 
+## [0.5.0] - 2015-08-14
+### Changed
+- Disabled annotations.
+
 ## [0.4.26] - 2015-07-29
 ## Fixed
 - Adjust height now tries 10 intervals of 300ms so that slow content has a change to adjust the

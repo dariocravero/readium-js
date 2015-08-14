@@ -35,7 +35,7 @@
 
 var _ = require('underscore')
 var $ = require('jquery')
-var AnnotationsManager = require('./annotations-manager')
+// var AnnotationsManager = require('./annotations-manager')
 var Backbone = require('backbone')
 var Events = require('../events')
 var extendedThrottle = require('../helpers/extended-throttle')
@@ -97,7 +97,7 @@ function ReaderView(options) {
   var _mediaOverlayDataInjector;
   var _iframeLoader;
   var _$el;
-  var _annotationsManager = new AnnotationsManager(self, options);
+  // var _annotationsManager = new AnnotationsManager(self, options);
 
   //We will call onViewportResize after user stopped resizing window
   var lazyResize = extendedThrottle(
@@ -280,7 +280,7 @@ function ReaderView(options) {
       _mediaOverlayDataInjector.attachMediaOverlayData($iframe, spineItem, _viewerSettings);
 
       _internalLinksSupport.processLinkElements($iframe, spineItem);
-      _annotationsManager.attachAnnotations($iframe, spineItem);
+      // _annotationsManager.attachAnnotations($iframe, spineItem);
 
       var contentDoc = $iframe[0].contentDocument;
       Trigger.register(contentDoc);
@@ -1211,53 +1211,53 @@ function ReaderView(options) {
     }
   };
 
-  /**
-   * Returns current selection partial Cfi, useful for workflows that need to check whether the user has selected something.
-   *
-   * @returns {object | undefined} partial cfi object or undefined if nothing is selected
-   */
-  this.getCurrentSelectionCfi = function() {
-    return _annotationsManager.getCurrentSelectionCfi();
-  };
+  // /**
+  //  * Returns current selection partial Cfi, useful for workflows that need to check whether the user has selected something.
+  //  *
+  //  * @returns {object | undefined} partial cfi object or undefined if nothing is selected
+  //  */
+  // this.getCurrentSelectionCfi = function() {
+  //   return _annotationsManager.getCurrentSelectionCfi();
+  // };
 
-  /**
-   * Creates a higlight based on given parameters
-   *
-   * @param {string} spineIdRef    spine idref that defines the partial Cfi
-   * @param {string} cfi           partial CFI (withouth the indirection step) relative to the spine index
-   * @param {string} id            id of the highlight. must be unique
-   * @param {string} type          currently "highlight" only
-   *
-   * @returns {object | undefined} partial cfi object of the created highlight
-   */
-  this.addHighlight = function(spineIdRef, Cfi, id, type, styles) {
-    return _annotationsManager.addHighlight(spineIdRef, Cfi, id, type, styles);
-  };
+  // /**
+  //  * Creates a higlight based on given parameters
+  //  *
+  //  * @param {string} spineIdRef    spine idref that defines the partial Cfi
+  //  * @param {string} cfi           partial CFI (withouth the indirection step) relative to the spine index
+  //  * @param {string} id            id of the highlight. must be unique
+  //  * @param {string} type          currently "highlight" only
+  //  *
+  //  * @returns {object | undefined} partial cfi object of the created highlight
+  //  */
+  // this.addHighlight = function(spineIdRef, Cfi, id, type, styles) {
+  //   return _annotationsManager.addHighlight(spineIdRef, Cfi, id, type, styles);
+  // };
 
 
-  /**
-   * Creates a higlight based on the current selection
-   *
-   * @param {string} id id of the highlight. must be unique
-   * @param {string} type currently "highlight" only
-   *
-   * @returns {object | undefined} partial cfi object of the created highlight
-   */
-  this.addSelectionHighlight = function(id, type) {
-    return _annotationsManager.addSelectionHighlight(id, type);
-  };
+  // /**
+  //  * Creates a higlight based on the current selection
+  //  *
+  //  * @param {string} id id of the highlight. must be unique
+  //  * @param {string} type currently "highlight" only
+  //  *
+  //  * @returns {object | undefined} partial cfi object of the created highlight
+  //  */
+  // this.addSelectionHighlight = function(id, type) {
+  //   return _annotationsManager.addSelectionHighlight(id, type);
+  // };
 
-  /**
-   * Removes A given highlight
-   *
-   * @param {string} id  The id associated with the highlight.
-   *
-   * @returns {undefined}
-   *
-   */
-  this.removeHighlight = function(id) {
-    return _annotationsManager.removeHighlight(id);
-  };
+  // /**
+  //  * Removes A given highlight
+  //  *
+  //  * @param {string} id  The id associated with the highlight.
+  //  *
+  //  * @returns {undefined}
+  //  *
+  //  */
+  // this.removeHighlight = function(id) {
+  //   return _annotationsManager.removeHighlight(id);
+  // };
 
   /**
    *

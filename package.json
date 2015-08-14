@@ -1,6 +1,6 @@
 {
   "name": "@hmh/readium",
-  "version": "0.4.26",
+  "version": "0.5.0",
   "description": "readium",
   "main": "src/index.js",
   "readme": "README.md",
