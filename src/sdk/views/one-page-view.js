@@ -315,8 +315,9 @@ function OnePageView(options, classes, enableBookStyleOverrides, reader) {
       _$el.css("transform", "translateZ(0)");
     }
 
-    _$el.css("height", "100%");
-    _$el.css("width", "100%");
+    //setting this too early causes IE11 to fix a width and height that is not the full viewport 100%
+    // _$el.css("height", "100%");
+    // _$el.css("width", "100%");
 
     for (var i = 0, count = classes.length; i < count; i++) {
       _$el.addClass(classes[i]);
