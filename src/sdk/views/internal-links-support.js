@@ -182,44 +182,47 @@ function InternalLinksSupport(reader) {
     var epubContentDocument = $iframe[0].contentDocument;
 
     $('a', epubContentDocument).click(function(clickEvent) {
+      
       if (clickEvent.currentTarget.attributes["data-glossary"] || clickEvent.currentTarget.attributes["data-ignore"]) {
         return;
       }
-
       // Check for both href and xlink:href attribute and get value
       var href;
       if (clickEvent.currentTarget.attributes["xlink:href"]) {
-
         href = clickEvent.currentTarget.attributes["xlink:href"].value;
       } else {
         href = clickEvent.currentTarget.attributes["href"].value;
       }
 
-      var overrideClickEvent = false;
       var hrefUri = new URI(href);
       var hrefIsRelative = hrefUri.is('relative');
 
       if (hrefIsRelative) {
 
-        if (isDeepLikHref(hrefUri)) {
-          processDeepLink(hrefUri, spineItem);
-          overrideClickEvent = true;
-        } else {
-          processLinkWithHash(hrefUri, spineItem);
-          overrideClickEvent = true;
+        var frame = $iframe[0].contentWindow;
+
+        //we need to construct a proper path, if not given
+        if(href.indexOf('/') < 0){ 
+          //href = frame.location.pathname.substring(0,frame.location.pathname.lastIndexOf("/")+1) + href; 
+          href = getAbsoluteUriRelativeToSpineItem(hrefUri, tmpSpineItem).toString();
         }
 
+        //we want to navigate using RCE event
+        frame.window.rceEventBus.emit('navigate:to', href);
+
       } else {
+
         // It's an absolute URL to a remote site - open it in a separate window outside the reader
         window.open(href, '_blank');
-        overrideClickEvent = true;
+
       }
 
-      if (overrideClickEvent) {
-        clickEvent.preventDefault();
-        clickEvent.stopPropagation();
-      }
+      clickEvent.preventDefault();
+      clickEvent.stopPropagation();
+      
     });
+
+  }
 
   }
 
