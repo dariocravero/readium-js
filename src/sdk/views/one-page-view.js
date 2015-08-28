@@ -324,6 +324,9 @@ function OnePageView(options, classes, enableBookStyleOverrides, reader) {
     }
 
     _$iframe = $("iframe", _$el);
+    _$iframe.attr("allowfullscreen", "true");
+    _$iframe.attr("webkitallowfullscreen", "true");
+    _$iframe.attr("mozAllowfullscreen", "true");
 
     return this;
   };
