@@ -112,6 +112,9 @@ function FixedView(options, reader) {
     CSSTransition(_$el, "all 0 ease 0");
 
     _$el.css("overflow", "hidden");
+    _$el.attr("allowfullscreen", "true");
+    _$el.attr("webkitallowfullscreen", "true");
+    _$el.attr("mozAllowfullscreen", "true");
 
     // Removed, see one_page_view@render()
     // var settings = reader.viewerSettings();

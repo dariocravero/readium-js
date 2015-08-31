@@ -177,6 +177,9 @@ function ReflowableView(options, reader) {
     _$iframe.css("left", "");
     _$iframe.css("right", "");
     _$iframe.css("position", "relative");
+    _$iframe.attr("allowfullscreen", "true");
+    _$iframe.attr("webkitallowfullscreen", "true");
+    _$iframe.attr("mozAllowfullscreen", "true");
     //_$iframe.css(_spine.isLeftToRight() ? "left" : "right", "0px");
     // _$iframe.css("overflow", "hidden");
 
